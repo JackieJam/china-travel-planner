@@ -544,8 +544,33 @@ body {
   background: var(--accent-hover);
 }
 
+/* ===== Clear Highlight Button ===== */
+.clear-highlight-btn {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  z-index: 20;
+  padding: 6px 14px;
+  background: #E63946;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+.clear-highlight-btn:hover { background: #c1303c; transform: scale(1.05); }
+.clear-highlight-btn.hidden { display: none; }
+.clear-icon { margin-right: 4px; }
+
 /* Offset when detail panel is open */
 .detail-panel:not(.hidden) ~ .map-mode-toggle {
+  right: calc(var(--detail-width) + 16px);
+}
+
+.detail-panel:not(.hidden) ~ .clear-highlight-btn {
   right: calc(var(--detail-width) + 16px);
 }
 

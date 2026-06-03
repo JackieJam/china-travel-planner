@@ -251,6 +251,84 @@ const LayerManager = {
   _highlightedTrain: null,
   _trainHighlight: [],
 
+  // Station importance classification
+  MAJOR_STATIONS: new Set([
+    '北京', '北京南', '北京西', '北京朝阳',
+    '上海', '上海虹桥',
+    '广州', '广州南', '广州东',
+    '深圳', '深圳北', '福田',
+    '武汉', '武汉站',
+    '成都', '成都东',
+    '重庆', '重庆北', '重庆西', '沙坪坝',
+    '西安', '西安北',
+    '南京', '南京南',
+    '杭州', '杭州东', '杭州西',
+    '长沙', '长沙南',
+    '郑州', '郑州东',
+    '天津', '天津南', '天津西',
+    '沈阳', '沈阳北',
+    '哈尔滨', '哈尔滨西',
+    '昆明', '昆明南',
+    '贵阳', '贵阳北', '贵阳东',
+    '南宁', '南宁东',
+    '福州', '福州南',
+    '厦门', '厦门北',
+    '合肥', '合肥南',
+    '济南', '济南西', '济南东',
+    '青岛', '青岛北',
+    '大连', '大连北',
+    '兰州', '兰州西',
+    '乌鲁木齐',
+    '拉萨',
+    '太原', '太原南',
+    '石家庄',
+    '南昌', '南昌西',
+    '海口', '海口东',
+    '三亚',
+  ]),
+
+  REGIONAL_STATIONS: new Set([
+    '苏州', '苏州北', '无锡', '无锡东', '常州', '常州北',
+    '宁波', '温州', '温州南',
+    '佛山', '佛山西', '东莞', '东莞南', '珠海',
+    '洛阳', '洛阳龙门',
+    '徐州', '徐州东',
+    '烟台', '潍坊',
+    '桂林', '柳州',
+    '宜昌', '宜昌东',
+    '襄阳', '襄阳东',
+    '九江',
+    '芜湖', '蚌埠',
+    '绍兴', '金华', '衢州',
+    '张家界', '怀化', '衡阳',
+    '遵义', '毕节',
+    '包头', '呼和浩特',
+    '银川', '西宁',
+    '秦皇岛', '唐山',
+    '保定', '邯郸',
+    '长春', '吉林',
+    '齐齐哈尔',
+    '延吉',
+    '威海', '日照',
+    '黄石', '咸宁',
+    '常德', '岳阳',
+    '赣州', '吉安',
+    '莆田', '泉州',
+    '肇庆', '惠州',
+    '中山', '江门',
+    '百色', '钦州',
+    '普洱', '西双版纳',
+    '林芝', '日喀则',
+    '敦煌', '嘉峪关', '张掖',
+    '万州', '达州', '南充',
+    '绵阳', '德阳', '乐山', '宜宾',
+    '汉中', '广元',
+    '临汾', '运城',
+    '曲阜', '泰安',
+    '黄山', '婺源',
+    '上饶', '鹰潭',
+  ]),
+
   // 高德地图覆盖物
   overlays: {
     hsrLines: [],
@@ -268,12 +346,17 @@ const LayerManager = {
     this._renderHSRLayer();
   },
 
+  _getStationImportance(stationName) {
+    if (this.MAJOR_STATIONS.has(stationName)) return 1;
+    if (this.REGIONAL_STATIONS.has(stationName)) return 2;
+    return 3;
+  },
+
   toggleLayer(layerName, show) {
     this.visible[layerName] = show;
     if (layerName === 'hsr') {
-      this._setOverlaysVisible(this.overlays.hsrLines, show);
-      this._setOverlaysVisible(this.overlays.hsrStations, show);
-      this._setOverlaysVisible(this.overlays.hsrLabels, show);
+      // Re-apply zoom-based visibility rules for lines, stations, and labels
+      this.onZoomChange(MapManager.currentZoom);
     } else if (layerName === 'metro') {
       if (show && this.selectedCity) {
         this._renderMetroLayer(this.selectedCity);
@@ -299,7 +382,7 @@ const LayerManager = {
       const importance = data ? data.importance : 1;
       let show = false;
       if (zoom >= 8) show = true;
-      else if (zoom >= 7 && importance <= 3) show = true;
+      else if (zoom >= 6 && importance <= 3) show = true;
       else if (zoom >= 5 && importance <= 2) show = true;
       else if (importance <= 1) show = true;
 
@@ -310,6 +393,28 @@ const LayerManager = {
       } else {
         line.hide();
       }
+    });
+
+    // Control station marker visibility by zoom and importance
+    this.overlays.hsrStations.forEach(marker => {
+      const importance = marker._stationImportance || 3;
+      let show = false;
+      if (zoom >= 10) show = true;
+      else if (zoom >= 7 && importance <= 2) show = true;
+      else if (zoom >= 5 && importance <= 1) show = true;
+
+      if (show && this.visible.hsr) marker.show(); else marker.hide();
+    });
+
+    // Control station labels by zoom and importance
+    this.overlays.stationLabels.forEach(label => {
+      const importance = label._stationImportance || 3;
+      let show = false;
+      if (zoom >= 10) show = true;
+      else if (zoom >= 7 && importance <= 2) show = true;
+      else if (zoom >= 5 && importance <= 1) show = true;
+
+      if (show && MapManager._cleanMode && this.visible.hsr) label.show(); else label.hide();
     });
   },
 
@@ -335,7 +440,7 @@ const LayerManager = {
       // Check zoom-based visibility
       let showByZoom = false;
       if (zoom >= 8) showByZoom = true;
-      else if (zoom >= 7 && importance <= 3) showByZoom = true;
+      else if (zoom >= 6 && importance <= 3) showByZoom = true;
       else if (zoom >= 5 && importance <= 2) showByZoom = true;
       else if (importance <= 1) showByZoom = true;
 
@@ -496,6 +601,8 @@ const LayerManager = {
           zIndex: 60,
         });
 
+        marker._stationImportance = this._getStationImportance(station.name);
+
         marker.on('click', (e) => {
           // 查找该站点属于哪些线路
           const lines = DataManager.hsr.filter(l =>
@@ -527,6 +634,7 @@ const LayerManager = {
             zIndex: 65,
             visible: false,
           });
+          label._stationImportance = this._getStationImportance(station.name);
           map.add(label);
           this.overlays.stationLabels.push(label);
         }
@@ -604,6 +712,8 @@ const LayerManager = {
           zIndex: 85,
         });
 
+        marker._stationImportance = this._getStationImportance(station.name);
+
         marker.on('click', () => {
           // 查找该站属于哪些地铁线
           const transferLines = metroData.lines.filter(l =>
@@ -635,6 +745,7 @@ const LayerManager = {
             zIndex: 86,
             visible: MapManager._cleanMode,
           });
+          label._stationImportance = this._getStationImportance(station.name);
           map.add(label);
           this.overlays.stationLabels.push(label);
         }
@@ -692,6 +803,10 @@ const LayerManager = {
 
     this._highlightedTrain = train;
 
+    // Show the clear-highlight button
+    const clearBtn = document.getElementById('clear-highlight-btn');
+    if (clearBtn) clearBtn.classList.remove('hidden');
+
     // Draw the train's route as a thick, brightly colored polyline
     const path = train.route
       .filter(s => s.arrive || s.depart)
@@ -712,6 +827,13 @@ const LayerManager = {
       strokeOpacity: 1,
       lineJoin: 'round',
       zIndex: 200,
+    });
+
+    polyline.on('click', () => {
+      if (this._highlightedTrain) {
+        this._clearTrainHighlight();
+        UIController.hideDetail();
+      }
     });
 
     MapManager.map.add(polyline);
@@ -744,6 +866,10 @@ const LayerManager = {
     this._trainHighlight = [];
     this._highlightedTrain = null;
     this._restoreAllLines();
+
+    // Hide the clear-highlight button
+    const clearBtn = document.getElementById('clear-highlight-btn');
+    if (clearBtn) clearBtn.classList.add('hidden');
   },
 
   _dimAllLines() {
@@ -845,6 +971,12 @@ const UIController = {
         const isActive = chip.classList.toggle('active');
         LayerManager.setLineFilter(type, isActive);
       });
+    });
+
+    // 取消车次高亮按钮
+    document.getElementById('clear-highlight-btn').addEventListener('click', () => {
+      LayerManager._clearTrainHighlight();
+      UIController.hideDetail();
     });
   },
 
