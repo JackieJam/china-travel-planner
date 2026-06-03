@@ -1,84 +1,899 @@
 [
-  {"name":"故宫博物院","city":"北京","center":[116.403,39.917],"category":"历史","description":"中国明清两代皇家宫殿，世界最大古代宫殿建筑群"},
-  {"name":"天坛公园","city":"北京","center":[116.417,39.882],"category":"历史","description":"明清皇帝祭天祈谷的场所，世界文化遗产"},
-  {"name":"颐和园","city":"北京","center":[116.275,39.999],"category":"历史","description":"皇家园林，中国古典园林之首"},
-  {"name":"八达岭长城","city":"北京","center":[116.020,40.354],"category":"历史","description":"万里长城最具代表性的一段"},
-  {"name":"圆明园","city":"北京","center":[116.297,39.998],"category":"历史","description":"清代皇家园林遗址，万园之园"},
-  {"name":"北海公园","city":"北京","center":[116.389,39.925],"category":"自然","description":"中国现存最古老的皇家园林之一"},
-  {"name":"外滩","city":"上海","center":[121.490,31.240],"category":"现代","description":"上海标志性景观，万国建筑博览群"},
-  {"name":"东方明珠","city":"上海","center":[121.500,31.240],"category":"现代","description":"上海地标，广播电视塔"},
-  {"name":"豫园","city":"上海","center":[121.492,31.228],"category":"历史","description":"明代古典园林，上海老城隍庙"},
-  {"name":"朱家角古镇","city":"上海","center":[121.058,31.107],"category":"历史","description":"江南水乡古镇"},
-  {"name":"广州塔","city":"广州","center":[113.325,23.106],"category":"现代","description":"小蛮腰，广州地标"},
-  {"name":"陈家祠","city":"广州","center":[113.245,31.122],"category":"历史","description":"清代宗祠建筑巅峰之作"},
-  {"name":"白云山","city":"广州","center":[113.297,23.198],"category":"自然","description":"广州市肺，南粤名山"},
-  {"name":"沙面岛","city":"广州","center":[113.238,23.107],"category":"历史","description":"欧式建筑群，近代租界遗址"},
-  {"name":"世界之窗","city":"深圳","center":[113.973,22.534],"category":"现代","description":"微缩世界景观主题公园"},
-  {"name":"东部华侨城","city":"深圳","center":[114.296,22.593],"category":"自然","description":"生态度假旅游胜地"},
-  {"name":"大梅沙海滨公园","city":"深圳","center":[114.316,22.586],"category":"自然","description":"深圳最长沙滩"},
-  {"name":"宽窄巷子","city":"成都","center":[104.052,30.670],"category":"历史","description":"清代古街道，成都文化名片"},
-  {"name":"武侯祠","city":"成都","center":[104.048,30.645],"category":"历史","description":"三国文化圣地，诸葛亮祠堂"},
-  {"name":"杜甫草堂","city":"成都","center":[104.038,30.661],"category":"历史","description":"诗圣杜甫流寓成都时的故居"},
-  {"name":"大熊猫基地","city":"成都","center":[104.145,30.734],"category":"自然","description":"大熊猫繁育研究基地"},
-  {"name":"锦里","city":"成都","center":[104.047,30.644],"category":"历史","description":"西蜀历史上最古老的商业街之一"},
-  {"name":"黄鹤楼","city":"武汉","center":[114.302,30.545],"category":"历史","description":"天下江山第一楼，江南三大名楼之一"},
-  {"name":"东湖","city":"武汉","center":[114.375,30.557],"category":"自然","description":"中国最大城中湖，楚文化胜地"},
-  {"name":"武汉大学","city":"武汉","center":[114.363,30.537],"category":"文化","description":"樱花大道，最美大学校园"},
-  {"name":"户部巷","city":"武汉","center":[114.302,30.541],"category":"现代","description":"武汉美食一条街"},
-  {"name":"西湖","city":"杭州","center":[120.130,30.245],"category":"自然","description":"人间天堂，世界文化遗产"},
-  {"name":"灵隐寺","city":"杭州","center":[120.100,30.242],"category":"历史","description":"江南著名古刹，千年佛教圣地"},
-  {"name":"千岛湖","city":"杭州","center":[118.960,29.590],"category":"自然","description":"天下第一秀水，人工湖泊"},
-  {"name":"河坊街","city":"杭州","center":[120.168,30.248],"category":"历史","description":"杭州历史文化街区"},
-  {"name":"中山陵","city":"南京","center":[118.850,32.038],"category":"历史","description":"孙中山先生陵寝，近代建筑杰作"},
-  {"name":"夫子庙","city":"南京","center":[118.786,32.020],"category":"历史","description":"秦淮河畔，中国四大文庙之一"},
-  {"name":"明孝陵","city":"南京","center":[118.838,32.052],"category":"历史","description":"明太祖朱元璋陵墓，世界文化遗产"},
-  {"name":"玄武湖","city":"南京","center":[118.794,32.074],"category":"自然","description":"中国最大皇家园林湖泊"},
-  {"name":"秦始皇兵马俑","city":"西安","center":[109.278,34.385],"category":"历史","description":"世界第八大奇迹，秦帝国地下军团"},
-  {"name":"大雁塔","city":"西安","center":[108.961,34.218],"category":"历史","description":"唐代佛教建筑，玄奘译经之所"},
-  {"name":"华清宫","city":"西安","center":[109.213,34.367],"category":"历史","description":"唐玄宗与杨贵妃的行宫"},
-  {"name":"城墙","city":"西安","center":[108.944,34.247],"category":"历史","description":"中国现存最完整的古城墙"},
-  {"name":"回民街","city":"西安","center":[108.940,34.257],"category":"现代","description":"西安最著名美食文化街区"},
-  {"name":"洪崖洞","city":"重庆","center":[106.580,29.563],"category":"现代","description":"巴渝传统建筑特色吊脚楼群"},
-  {"name":"解放碑","city":"重庆","center":[106.577,29.558],"category":"现代","description":"抗战胜利纪功碑，重庆地标"},
-  {"name":"磁器口","city":"重庆","center":[106.418,29.562],"category":"历史","description":"千年古镇，老重庆缩影"},
-  {"name":"武隆天坑","city":"重庆","center":[107.760,29.335],"category":"自然","description":"天生三桥，世界自然遗产"},
-  {"name":"故宫沈阳","city":"沈阳","center":[123.449,41.796],"category":"历史","description":"清朝入关前的皇宫，世界文化遗产"},
-  {"name":"冰雪大世界","city":"哈尔滨","center":[126.594,45.785],"category":"现代","description":"世界最大冰雪主题乐园"},
-  {"name":"中央大街","city":"哈尔滨","center":[126.616,45.771],"category":"历史","description":"亚洲最长步行街，欧式建筑群"},
-  {"name":"鼓浪屿","city":"厦门","center":[118.066,24.446],"category":"历史","description":"万国建筑博览，钢琴之岛，世界文化遗产"},
-  {"name":"南普陀寺","city":"厦门","center":[118.094,24.437],"category":"历史","description":"闽南佛教名刹"},
-  {"name":"三坊七巷","city":"福州","center":[119.294,26.084],"category":"历史","description":"中国城市里坊制度活化石"},
-  {"name":"黄山风景区","city":"黄山","center":[118.163,30.130],"category":"自然","description":"天下第一奇山，世界文化与自然双遗产"},
-  {"name":"宏村","city":"黄山","center":[117.983,29.903],"category":"历史","description":"中国画里乡村，世界文化遗产"},
-  {"name":"漓江","city":"桂林","center":[110.388,24.850],"category":"自然","description":"桂林山水甲天下，世界自然遗产"},
-  {"name":"象鼻山","city":"桂林","center":[110.297,25.263],"category":"自然","description":"桂林城市标志"},
-  {"name":"天涯海角","city":"三亚","center":[109.344,18.293],"category":"自然","description":"海南标志性景区"},
-  {"name":"亚龙湾","city":"三亚","center":[109.643,18.193],"category":"自然","description":"天下第一湾，热带海滨度假胜地"},
-  {"name":"泰山","city":"济南","center":[117.100,36.254],"category":"自然","description":"五岳之首，世界文化与自然双遗产"},
-  {"name":"趵突泉","city":"济南","center":[117.011,36.657],"category":"自然","description":"天下第一泉"},
-  {"name":"大明湖","city":"济南","center":[117.013,36.672],"category":"自然","description":"泉城明珠"},
-  {"name":"栈桥","city":"青岛","center":[120.317,36.058],"category":"现代","description":"青岛标志性建筑"},
-  {"name":"崂山","city":"青岛","center":[120.619,36.148],"category":"自然","description":"海上名山第一"},
-  {"name":"八大关","city":"青岛","center":[120.345,36.050],"category":"历史","description":"万国建筑博览会"},
-  {"name":"滇池","city":"昆明","center":[102.668,24.834],"category":"自然","description":"高原明珠，云南最大淡水湖"},
-  {"name":"石林","city":"昆明","center":[103.274,24.818],"category":"自然","description":"天下第一奇观，世界自然遗产"},
-  {"name":"翠湖","city":"昆明","center":[102.707,25.044],"category":"自然","description":"昆明的眼睛"},
-  {"name":"黔灵山","city":"贵阳","center":[106.684,26.600],"category":"自然","description":"黔南第一山"},
-  {"name":"青岩古镇","city":"贵阳","center":[106.663,26.354],"category":"历史","description":"贵州四大古镇之一"},
-  {"name":"布达拉宫","city":"拉萨","center":[91.117,29.657],"category":"历史","description":"世界屋脊上的宫殿，世界文化遗产"},
-  {"name":"大昭寺","city":"拉萨","center":[91.132,29.652],"category":"历史","description":"藏传佛教圣地"},
-  {"name":"张家界国家森林公园","city":"张家界","center":[110.434,29.320],"category":"自然","description":"奇峰三千，世界自然遗产"},
-  {"name":"天门山","city":"张家界","center":[110.479,29.052],"category":"自然","description":"天门洞开，玻璃栈道"},
-  {"name":"丽江古城","city":"丽江","center":[100.233,26.872],"category":"历史","description":"纳西族古城，世界文化遗产"},
-  {"name":"玉龙雪山","city":"丽江","center":[100.187,27.118],"category":"自然","description":"北半球最近赤道的雪山"},
-  {"name":"橘子洲","city":"长沙","center":[112.956,28.196],"category":"现代","description":"湘江中的长岛，青年毛泽东雕塑"},
-  {"name":"岳麓山","city":"长沙","center":[112.939,28.180],"category":"自然","description":"南岳七十二峰之尾峰"},
-  {"name":"岳阳楼","city":"长沙","center":[113.098,29.370],"category":"历史","description":"江南三大名楼之一，范仲淹名篇"},
-  {"name":"瘦西湖","city":"扬州","center":[119.425,32.418],"category":"自然","description":"中国湖上园林的代表"},
-  {"name":"拙政园","city":"苏州","center":[120.629,31.325],"category":"历史","description":"中国四大名园之一，世界文化遗产"},
-  {"name":"虎丘","city":"苏州","center":[120.573,31.323],"category":"历史","description":"吴中第一名胜"},
-  {"name":"周庄","city":"苏州","center":[120.845,31.112],"category":"历史","description":"中国第一水乡"},
-  {"name":"龙门石窟","city":"洛阳","center":[112.470,34.570],"category":"历史","description":"世界石刻艺术宝库，世界文化遗产"},
-  {"name":"白马寺","city":"洛阳","center":[112.572,34.734],"category":"历史","description":"中国第一古刹"},
-  {"name":"三峡大坝","city":"宜昌","center":[111.003,30.830],"category":"现代","description":"世界最大水利枢纽工程"}
+  {
+    "name": "故宫博物院",
+    "city": "北京",
+    "center": [
+      116.403,
+      39.917
+    ],
+    "category": "历史",
+    "description": "故宮博物院，又稱北京故宮，是位于中华人民共和国北京紫禁城内的博物館。民國元年（1912年）清帝溥仪退位後仍居於宮內。至民國十三年（1924年）十一月五日，黃郛攝政內閣公布修正清室優待條件第五條，廢除皇帝尊號，並將溥儀驅逐出宮。政府代表李煜瀛、京師警衛司令鹿鍾麟、警察總監張璧，於六日接管皇宮，封存文物。後經攝政內閣核准，經一年之整理，故宮博物院於民國十四年國慶節（1925年10月10日）正式成立開幕。它位于北京中轴线的中心，佔地面积72万平方米，建筑面积约15万平方米；始建于明成祖朱棣永乐四年（1406年），永乐十八年（1420年）落成；藏品也主要是以明、清两代皇宫及其收藏为基础。2012年单日最高客流量突破18万人次，全年客流量突破1500万人次，可以说是世界上接待游客最繁忙的博物馆。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/15/The_Forbidden_City%2C_Beijing%2C_China_%28%E6%95%85%E5%AE%AB%E5%8D%9A%E7%89%A9%E9%99%A2%29.jpg"
+  },
+  {
+    "name": "天坛公园",
+    "city": "北京",
+    "center": [
+      116.417,
+      39.882
+    ],
+    "category": "历史",
+    "description": "天坛，位于北京市东城区，是明清两朝皇帝祭天、祈穀和祈雨的场所。天坛始建于明成祖永乐十八年（公元1420年），原名“天地坛”，明嘉靖九年（公元1530年）在北京北郊另建祭祀地神的地坛，并改名为“天坛”。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Temple_of_Heaven%2C_Beijing%2C_China_-_010_edit.jpg"
+  },
+  {
+    "name": "颐和园",
+    "city": "北京",
+    "center": [
+      116.275,
+      39.999
+    ],
+    "category": "历史",
+    "description": "颐和园是清朝的皇家行宮和大型皇家園林，位于中国北京市海淀区西北，占地297公顷，主要由万寿山万寿山 (北京)和昆明湖组成。颐和园修建于清朝乾隆年间（原名清漪园），重建于光绪年间，曾属于清朝北京西郊三山五园之一。颐和园素以人工建筑与自然山水巧妙结合的造园手法著称于世，是中国园林艺术顶峰时期的代表。1998年12月2日，颐和园被评为世界文化遺產。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/db/Longevity_Hill_of_the_Summer_Palace.jpg"
+  },
+  {
+    "name": "八达岭长城",
+    "city": "北京",
+    "center": [
+      116.02,
+      40.354
+    ],
+    "category": "历史",
+    "description": "八达岭是位于北京市延庆区内临近居庸关的一个山峰，最高点1,015米。地处于北京西北。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E5%85%AB%E8%BE%BE%E5%B2%AD%E9%95%BF%E5%9F%8E_-_panoramio.jpg"
+  },
+  {
+    "name": "圆明园",
+    "city": "北京",
+    "center": [
+      116.297,
+      39.998
+    ],
+    "category": "历史",
+    "description": "圆明园是清朝興建的大型皇家园林，康熙帝賜此園予皇四子胤禛（法號圓明居士），並提匾「圓明」。供清帝盛夏避暑、听政，处理军政事务，位于現今中華人民共和国北京市海淀区。与长春园，绮春园合称为“圆明三园”，占地面积3.5平方公里，建筑面积达16万平方公尺，约合5,200亩一百五十余景，有“万园之园”之称。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Yuanmingyuan_Station_Platform_20140121.JPG"
+  },
+  {
+    "name": "北海公园",
+    "city": "北京",
+    "center": [
+      116.389,
+      39.925
+    ],
+    "category": "自然",
+    "description": "北海公园位于中華人民共和国北京市城区的中偏北部，故宫和景山的西北侧，始建于宋辽金时代，是世界上现存建园时间最早的皇家宫苑。北海的布局以琼华岛为主体，在岛的顶端建有标志性建筑永安寺白塔，与南岸的团城、北岸的宫苑群遥相呼应，相互借景，构成园林的南北中轴线。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/20/Peking_Beihai_Park_Vase-20110104-RM-113150.jpg"
+  },
+  {
+    "name": "外滩",
+    "city": "上海",
+    "center": [
+      121.49,
+      31.24
+    ],
+    "category": "现代",
+    "description": "外滩是上海市中心的一个区域，由一段沿黄浦江的马路和沿路的建筑和设施构成，为上海重要的地标之一。全长1.5公里，南起延安东路，北至苏州河上的外白渡桥，东面即黄浦江，西面是旧上海金融、外贸机构的集中地。外滩沿路坐拥二十多幢风格各异的历史建筑，有折衷主义的，也有文艺复兴式的，还有早期现代式的，故而被誉为“万国建筑博览群”。自上海开埠后，外滩就开始成为了上海乃至中国的金融及贸易中心，也被称为“东方华尔街”。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e5/%E4%BB%8E%E5%A4%96%E6%BB%A9%E8%BF%9C%E7%9C%BA%E6%B5%A6%E4%B8%9C%E6%96%B0%E5%8C%BA.jpg"
+  },
+  {
+    "name": "东方明珠",
+    "city": "上海",
+    "center": [
+      121.5,
+      31.24
+    ],
+    "category": "现代",
+    "description": "东方明珠可以指：\n東方明珠 (澳門)，澳門大型藝術雕塑\n東方明珠總站，位於澳門黑沙環新區東方明珠街的巴士總站\n东方明珠广播电视塔，上海塔型建築\n东方明珠 (公司)，上海文化公司，全称上海东方明珠新媒体股份有限公司\n東方明珠 (演員)，活躍於20世紀50年代初期的香港廈語片、國語片女明星，楊維漢的胞妹\n東方明珠石油，香港上市的石油公司，全称東方明珠石油有限公司",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Oriental_Pearl_Tower_in_Shanghai.jpg"
+  },
+  {
+    "name": "豫园",
+    "city": "上海",
+    "center": [
+      121.492,
+      31.228
+    ],
+    "category": "历史",
+    "description": "豫园是建于明朝时期的古典园林，座落于中华人民共和国上海市黄浦区，原上海老城厢东北部，北靠福佑路，东临安仁街，西南有城隍庙、豫园商城。豫园建于1559年，最初是四川布政使潘允端的私人园林，他建造此园林的目的是“愉悦老亲”，而“愉”和“豫”意思相通，故而得名豫园。之后，豫园辗转于多人之手并经受多次战火的摧残。如今其是典型的江南园林代表并已经成为上海的一個旅遊景點。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/80/Yuyuan_Gardens_-_concrete_bird_design.JPG"
+  },
+  {
+    "name": "朱家角古镇",
+    "city": "上海",
+    "center": [
+      121.058,
+      31.107
+    ],
+    "category": "历史",
+    "description": "江南水乡古镇",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/09/%E6%9C%B1%E5%AE%B6%E8%A7%92%E5%8F%A4%E9%95%87%EF%BC%8CZhujiajiao_Water_Village_-_panoramio.jpg"
+  },
+  {
+    "name": "广州塔",
+    "city": "广州",
+    "center": [
+      113.325,
+      23.106
+    ],
+    "category": "现代",
+    "description": "广州塔，昵稱小蠻腰、扭紋柴或針筒，位于中国广州市海珠区赤岗街道艺洲路赤岗塔附近地面，海拔高程600米，距离珠江南岸125米，与海心沙岛及珠江新城隔江相望。广州塔是一座以观光旅游为主，具有广播电视发射、文化娱乐和城市窗口功能的電波塔，为2010年在广州举行的第十六届亚洲运动会提供转播服务。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Canton_tower_in_asian_games_opening_ceremony.jpg"
+  },
+  {
+    "name": "陈家祠",
+    "city": "广州",
+    "center": [
+      113.245,
+      31.122
+    ],
+    "category": "历史",
+    "description": "陈家祠（陈氏书院）位於中华人民共和国广东省广州市荔湾区金花街道陈家祠社区中山七路恩龙里34号，始建于清朝光绪十四年（1888年），是当时广东省七十二县陈姓宗亲合资兴建的合族宗祠。陈家祠是集岭南历代建筑艺术之大成的典型代表，以装饰精巧、堂皇富丽而著称于世。现辟为广东民间工艺博物馆。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/80/Chen_Clan_Ancestral_Hall_2025.06_03.jpg"
+  },
+  {
+    "name": "白云山",
+    "city": "广州",
+    "center": [
+      113.297,
+      23.198
+    ],
+    "category": "自然",
+    "description": "广州市肺，南粤名山",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c2/%E5%8D%B0%E7%AB%A0_%E7%99%BD%E4%BA%91%E5%B1%B1%E6%A8%B5.jpg"
+  },
+  {
+    "name": "沙面岛",
+    "city": "广州",
+    "center": [
+      113.238,
+      23.107
+    ],
+    "category": "历史",
+    "description": "沙面岛舊稱拾翠洲、中流沙，是中華人民共和國廣東省廣州市荔灣區內的一座島嶼，位于西關六二三路的对岸，白鹅潭北部，是珠江上的一个人工小岛，与广州珠江北岸隔沙基涌相望，面积约0.3平方公里。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Shamian_001.jpg"
+  },
+  {
+    "name": "世界之窗",
+    "city": "深圳",
+    "center": [
+      113.973,
+      22.534
+    ],
+    "category": "现代",
+    "description": "世界之窗是位于中国广东省深圳市南山区华侨城的主題公園，收納世界各地名勝的微縮模型，是深圳最为著名的旅游景点之一。世界之窗坐落于深圳灣畔，佔地48萬平方米，景區按世界地域結構和遊覽活動内容分为世界廣場、亞洲區、大洋洲區、歐洲區、非洲區、美洲區、世界雕塑園和國際街八大區域，囊括景观130多处。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/65/%E4%B8%96%E7%95%8C%E4%B9%8B%E7%AA%97%E7%AB%99_%E4%B8%BB%E5%9B%BE_%2820221119%29.jpg"
+  },
+  {
+    "name": "东部华侨城",
+    "city": "深圳",
+    "center": [
+      114.296,
+      22.593
+    ],
+    "category": "自然",
+    "description": "东部华侨城 是位于中国广东省深圳市盐田区，由华侨城集团投资建造的一个自然与人造景观结合的旅游度假区和主题公园。总占地面积约9平方公里，2004年开始興建，2007年7月底开幕。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/17/OCT_East_in_June_2019.jpg"
+  },
+  {
+    "name": "大梅沙海滨公园",
+    "city": "深圳",
+    "center": [
+      114.316,
+      22.586
+    ],
+    "category": "自然",
+    "description": "大梅沙海濱公園位於中國深圳市鹽田區，是深圳的一個沙灘，於1999年開發，是深圳比較早期開發的海濱公園之一，也是深圳著名的沙灘之一；大梅沙海濱公園是1999年深圳市政府的“為民辦的十件實事”之一。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Dameisha_viewed_from_the_sea_300meters_high.jpg"
+  },
+  {
+    "name": "宽窄巷子",
+    "city": "成都",
+    "center": [
+      104.052,
+      30.67
+    ],
+    "category": "历史",
+    "description": "宽窄巷子是中国四川省成都市的一个历史文化区，由三条东西方向的老街 以及街道之间的居民宅院组成。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/%E5%AE%BD%E7%AA%84%E5%B7%B7%E5%AD%90_-_panoramio.jpg"
+  },
+  {
+    "name": "武侯祠",
+    "city": "成都",
+    "center": [
+      104.048,
+      30.645
+    ],
+    "category": "历史",
+    "description": "武侯祠，是为了纪念三国蜀汉丞相诸葛亮而兴建的祭祀建筑。其中勉县武侯祠为刘禅所立的官祠，始建年代最早；南阳武侯祠由诸葛亮故将黄权建立，始于魏晋年间；成都武侯祠，始建于成汉年间，君臣合祭，最为知名。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/%E6%88%90%E9%83%BD%E7%9A%84%E6%AD%A6%E4%BE%AF%E7%A5%A0.jpg"
+  },
+  {
+    "name": "杜甫草堂",
+    "city": "成都",
+    "center": [
+      104.038,
+      30.661
+    ],
+    "category": "历史",
+    "description": "杜甫草堂，又名杜甫草堂博物馆，位于中华人民共和国四川省成都市青羊区草堂街道青华路38号，浣花溪公园旁，占地24公顷居住于。1961年3月4日公佈為第一批全國重點文物保護單位，2006年12月被中国国家旅游局评为国家4A级旅游景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Chengdu_Sichuan_China_Du-Fu-Thatched-Cottage-Park-01.jpg"
+  },
+  {
+    "name": "大熊猫基地",
+    "city": "成都",
+    "center": [
+      104.145,
+      30.734
+    ],
+    "category": "自然",
+    "description": "成都大熊猫繁育研究基地（简称熊猫基地）位于中华人民共和国四川省成都市成华区熊猫大道1375号，在斧头山侧的浅丘上。是一個集大熊猫科研繁殖、公众教育和教育旅游为一体的研究机构和旅游目的地，也是一个专门从事濒危野生动物研究、繁育、保护教育和教育旅游的非营利性机构。该基地下设成都大熊猫繁育研究基地都江堰野放繁育研究中心（简称熊猫谷），位于都江堰市境内。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/df/Chengdu_Sichuan_China_Panda-breeding-and-research-center-02.jpg"
+  },
+  {
+    "name": "锦里",
+    "city": "成都",
+    "center": [
+      104.047,
+      30.644
+    ],
+    "category": "历史",
+    "description": "锦里，又名锦里一条街、锦里古街，是位於中國四川省成都市的一條古商業街，最早可追溯到秦漢時期。传说中锦里曾是西蜀历史上最古老、最具有商业气息的街道之一，早在秦汉、三国时期便闻名全国。锦里毗邻武侯祠，頗有古蜀國民風。現在的锦里已經被開發成一條民俗商業步行街，混合三國文化以及川西文化。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/94/%E9%94%A6%E9%87%8C%E5%8F%A4%E8%A1%97_2011.jpg"
+  },
+  {
+    "name": "黄鹤楼",
+    "city": "武汉",
+    "center": [
+      114.302,
+      30.545
+    ],
+    "category": "历史",
+    "description": "黄鹤楼位于中华人民共和国湖北省武汉市武昌蛇山上，与湖南岳阳楼、江西滕王阁合称江南三大名楼，是中国国家旅游胜地四十佳之一。黄鹤楼被称为“天下绝景”，这一称谓源自宋徽宗的一幅画“天下绝景黄鹤楼”。始建于三国时代吴黄武二年（公元223年），自初代開始，距今已有1800年历史，历代屡修屡毁，上一代為三層式，毀於1884年，黄鹤楼原址靠近江边，被选用为武汉长江公铁两用大桥的引桥起点，现在的黄鹤楼是于1985年异址重建的。最新一代版黄鹤楼共5层，高51.4米。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b7/%E6%AD%A6%E6%B1%89%E9%BB%84%E9%B9%A4%E6%A5%BC.jpg"
+  },
+  {
+    "name": "东湖",
+    "city": "武汉",
+    "center": [
+      114.375,
+      30.557
+    ],
+    "category": "自然",
+    "description": "中国最大城中湖，楚文化胜地",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Dong_Hu_20140203_141205.jpg"
+  },
+  {
+    "name": "武汉大学",
+    "city": "武汉",
+    "center": [
+      114.363,
+      30.537
+    ],
+    "category": "文化",
+    "description": "武汉大学，简称武大，是一所位於中国大陆湖北省武汉市武昌区的副部级科研型綜合大學。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/ce/%E6%AD%A6%E6%B1%89%E5%A4%A7%E5%AD%A6%E5%AE%BF%E8%88%8D%E6%A5%BC.jpg"
+  },
+  {
+    "name": "户部巷",
+    "city": "武汉",
+    "center": [
+      114.302,
+      30.541
+    ],
+    "category": "现代",
+    "description": "户部巷，位于湖北省武汉市武昌城内，民主路西段以北，南北走向，长150米，宽4米，连通民主路和自由路，是明清旧时古巷。\n巷道两侧多为老式砖木房屋，其旧貌尚存。1967年曾易名红安一巷，1972年复故名。\n被誉为“汉味早点第一巷”，有“早尝户部巷，夜吃吉庆街”之说。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Hubu_Xiang_6.jpg"
+  },
+  {
+    "name": "西湖",
+    "city": "杭州",
+    "center": [
+      120.13,
+      30.245
+    ],
+    "category": "自然",
+    "description": "西湖位于中华人民共和国浙江省杭州旧城西侧，是中国大陆首批国家重点风景名胜区和中国十大风景名胜之一。中国主要的观赏性淡水湖泊之一。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d2/CADAL02000526_%E8%A5%BF%E6%B9%96%E4%BD%B3%E8%A9%B1%EF%BC%88%E4%B8%8B%EF%BC%89.djvu"
+  },
+  {
+    "name": "灵隐寺",
+    "city": "杭州",
+    "center": [
+      120.1,
+      30.242
+    ],
+    "category": "历史",
+    "description": "灵隐寺，又称云林禅寺，位于杭州西湖西北面，在飞来峰与北高峰之间灵隐山山麓中，江南名刹，中国十大古刹之一，亦是南宋高僧濟公的修行地。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f9/%E7%81%B5%E9%9A%90%E5%AF%BA%E3%80%8C%E5%92%AB%E5%B0%BA%E8%A5%BF%E5%A4%A9%E3%80%8D%E5%A2%99.jpg"
+  },
+  {
+    "name": "千岛湖",
+    "city": "杭州",
+    "center": [
+      118.96,
+      29.59
+    ],
+    "category": "自然",
+    "description": "千岛湖，又称新安江水库，为新安江水电站的水体部分，位于中华人民共和国浙江省杭州市西南部的淳安县和建德市境内，以发电为主，兼有防洪、灌溉、渔业、航运、旅游等功能。为多年调节大型水库。1959年在新安江建德马铜官峡筑坝兴建水电站而形成的人工湖，面积达567.40平方公里。水库蓄水后未被淹没的山峰形成岛屿，当水库水位运行于108米高程（黄海）时，2500平方米以上岛屿共1078个，因此新安江水库得名千岛湖。"
+  },
+  {
+    "name": "河坊街",
+    "city": "杭州",
+    "center": [
+      120.168,
+      30.248
+    ],
+    "category": "历史",
+    "description": "河坊街位于杭州市上城区，东起江城路，西达南山路柳浪闻莺。特色街区部分位于中河中路至延安南路段。位于吴山脚下，与中山中路（南宋时期的御街）并称为四拐角。即从宋时至民国初期杭州的最重要的商业区。河坊街穿過的清河坊歷史街區现为国家AAAA级风景旅游区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Hefang_Street_20240729.jpg"
+  },
+  {
+    "name": "中山陵",
+    "city": "南京",
+    "center": [
+      118.85,
+      32.038
+    ],
+    "category": "历史",
+    "description": "中山陵，是中華民國国父暨中國民主革命先行者孫中山的陵墓，位于中国大陆江苏省南京市玄武区孝陵卫街道紫金山南麓，东邻灵谷寺、西毗明孝陵。孙中山于1925年3月在北平市逝世後，國民政府和中國國民黨遵照他的遗愿，在南京为其修建陵墓。中山陵于1926年1月开始兴建，1929年春建成祭堂等主要建筑。当年6月1日国民政府举办“奉安大典”，遗体正式入葬陵寝。陵墓全部工程至1931年宣告完成。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/China-Nanjing_%282024%29_Mausoleum_of_Sun_Yat_Sen_%E4%B8%AD%E5%B1%B1%E9%99%B5_-_img_08.jpg"
+  },
+  {
+    "name": "夫子庙",
+    "city": "南京",
+    "center": [
+      118.786,
+      32.02
+    ],
+    "category": "历史",
+    "description": "孔庙，又称夫子庙、至聖廟、先師廟、先聖廟、文宣王廟（即通常所称的文庙），本是中国纪念孔子、供后人祭祀孔子的庙宇式建筑，自汉武帝罢黜百家，独尊儒术后成为借以宣传儒家思想的庙宇。"
+  },
+  {
+    "name": "明孝陵",
+    "city": "南京",
+    "center": [
+      118.838,
+      32.052
+    ],
+    "category": "历史",
+    "description": "明孝陵是明代开国皇帝朱元璋和皇后马氏的合葬陵墓。因皇后諡「孝慈」，故名孝陵。作为中国明陵之首的明孝陵壮观宏伟，代表了明初建筑和石刻艺术的最高成就，影响了明清两代500多年帝王陵寝的形制。依历史进程分布于北京、湖北、辽宁、河北等地的明清皇家陵寝，均按南京明孝陵的规制和模式营建。坐落在南京紫金山独龙阜玩珠峰下，东毗中山陵，南临梅花山。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f8/China-Nanjing_%282024%29_Ming_Xiaoling_%E6%98%8E%E5%AD%9D%E9%99%B5_-_img_14.jpg"
+  },
+  {
+    "name": "玄武湖",
+    "city": "南京",
+    "center": [
+      118.794,
+      32.074
+    ],
+    "category": "自然",
+    "description": "玄武湖位于江苏南京，六朝前称桑泊，曾是中國最大的皇家園林湖泊，當代僅存的江南皇家園林。与杭州西湖、嘉兴南湖并称“江南三大名湖”。玄武湖公園是江南最大的市内公園。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Xuanwu_Lake.jpg"
+  },
+  {
+    "name": "秦始皇兵马俑",
+    "city": "西安",
+    "center": [
+      109.278,
+      34.385
+    ],
+    "category": "历史",
+    "description": "秦始皇兵马俑又稱秦始皇陵兵马俑、秦陵兵马俑，位于中华人民共和国陕西省西安市临潼区秦陵街道秦俑村。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a9/%E7%A7%A6%E5%A7%8B%E7%9A%87_%E5%85%B5%E9%A9%AC%E4%BF%91.JPG"
+  },
+  {
+    "name": "大雁塔",
+    "city": "西安",
+    "center": [
+      108.961,
+      34.218
+    ],
+    "category": "历史",
+    "description": "大雁塔，位于今中华人民共和国陕西省西安市雁塔区大雁塔街道大慈恩寺内，為一座七层方形佛塔，起初是玄奘三藏为保存佛经而建造的磚塔，現已成為西安市内著名古迹及标志性建筑，同时也是西安市市徽当中的主要组成部分。唐代新科進士流行在塔壁簽名留念，故雁塔題名一詞也成為考取進士的別稱。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/Giant_Wild_Goose_Pagoda%2C_Xi%27an%2C_May%2C_2018-1.jpg"
+  },
+  {
+    "name": "华清宫",
+    "city": "西安",
+    "center": [
+      109.213,
+      34.367
+    ],
+    "category": "历史",
+    "description": "华清宫遗址是中国唐朝時期兴建的“离宫”之一。唐太宗贞观十八年（644年）在骊山建汤泉宫，并任命阎立德主持营造。唐玄宗天宝六年（747年）改名华清宫，并进行了大规模扩建。使华清宫成为皇家的度假别墅和行宫别苑，並擁有專屬的溫泉。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8e/%E5%8D%8E%E6%B8%85%E5%AE%AB.jpg"
+  },
+  {
+    "name": "城墙",
+    "city": "西安",
+    "center": [
+      108.944,
+      34.247
+    ],
+    "category": "历史",
+    "description": "西安城墙是位于陕西省西安市城区的城墙。西安城墙自明朝初年在唐长安城皇城的基础上建造起来，后来又经过多次修补，形成严密的防御体系，是中国现存最完整的古城墙之一，与山西平遥城墙、湖北荆州城墙、辽宁兴城城墙等并列为中国现存最完好的四座古城墙，也是规模最大的古城墙之一（最大为南京城墙），周长13.74公里，城墙周围有护城河环绕，是中世纪后期最著名的城垣建筑之一。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Nuremberg_defensive_wall_north_f_burggarten_bastion_f_w.jpg"
+  },
+  {
+    "name": "回民街",
+    "city": "西安",
+    "center": [
+      108.94,
+      34.257
+    ],
+    "category": "现代",
+    "description": "西安回坊是中國西安市的一个比较大的回族聚集区，位于西安城墙内西北区域，主要指西大街以北，北院门以西，红埠街以南，早慈巷以东的区域。回坊目前主要归属于北院门街道办事处下辖的化觉巷、红埠街、学习巷与洒金桥四个社区。据2003年统计，回坊内约有各族穆斯林人口32361人，占到西安穆斯林人口总数49.8%。页15",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/%E8%A5%BF%E5%AE%89%E5%9B%9E%E6%B0%91%E8%A1%97.jpg"
+  },
+  {
+    "name": "洪崖洞",
+    "city": "重庆",
+    "center": [
+      106.58,
+      29.563
+    ],
+    "category": "现代",
+    "description": "洪崖洞民俗风貌区，常简称为洪崖洞，是位于中华人民共和国重庆市渝中区的商业景区，由重庆小天鹅集团修建并运营，于2006年正式开放。其主体建筑仿照重庆传统吊脚楼的风格，依山而建，高11层，商业面积5.3万平方米，目前是国家4A级旅游景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/86/Hongya_Cave_20180520.jpg"
+  },
+  {
+    "name": "解放碑",
+    "city": "重庆",
+    "center": [
+      106.577,
+      29.558
+    ],
+    "category": "现代",
+    "description": "抗战胜利纪功碑暨人民解放纪念碑，原名抗战胜利纪功碑，1949年后加称人民解放纪念碑，简称解放碑，位于重庆市渝中区解放碑中央商务区的中心地带，民族路、民权路、邹容路交汇的十字路口处，是重庆的地标。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/%E9%87%8D%E5%BA%86%E8%A7%A3%E6%94%BE%E7%A2%91%E5%9C%B0%E4%B8%8B%E7%8E%AF%E9%81%93%E5%86%85%E7%9A%84%E8%B7%AF%E5%8F%A3.jpg"
+  },
+  {
+    "name": "磁器口",
+    "city": "重庆",
+    "center": [
+      106.418,
+      29.562
+    ],
+    "category": "历史",
+    "description": "磁器口古镇，原名瓷器口镇、白崖鎮、白岩场镇、龙隐镇，位于重庆市沙坪坝区，比邻嘉陵江。自明、清时期以来磁器口一直是重要的水陆码头，为嘉陵江下游物资集散地。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/78/Platform_of_L5_Ciqikou_Station_%2820200731133156%29.jpg"
+  },
+  {
+    "name": "武隆天坑",
+    "city": "重庆",
+    "center": [
+      107.76,
+      29.335
+    ],
+    "category": "自然",
+    "description": "天生三桥位于重庆武隆区仙女山镇，是重庆直辖市级风景名胜区，重庆武隆岩溶国家地质公园的一部分，也被评为中国国家5A级旅游景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E6%AD%A6%E9%9A%86%E5%A4%A9%E5%9D%91_%2856%29_%2830489503064%29.jpg"
+  },
+  {
+    "name": "故宫沈阳",
+    "city": "沈阳",
+    "center": [
+      123.449,
+      41.796
+    ],
+    "category": "历史",
+    "description": "沈阳故宫，位于辽宁省沈阳市沈河区明清旧城中心，是后金、清朝入关前的沈阳（盛京）皇宫，清朝入關迁都北京后改為盛京行宫（或称奉天行宫），始建于1625年。乾隆帝时期又有较大规模的改建与增修，占地约6万平方米。1926年以后，其建筑群陆续辟作博物馆（现称沈阳故宫博物院）。1961年3月被中华人民共和国国务院确定为首批全国重点文物保护单位，2004年7月列入《世界遗产名录》“北京及沈阳的明清皇家宫殿”项目。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/65/Mukden_Palace_drone_view_5_%28cropped_%26_rotated%29.jpg"
+  },
+  {
+    "name": "冰雪大世界",
+    "city": "哈尔滨",
+    "center": [
+      126.594,
+      45.785
+    ],
+    "category": "现代",
+    "description": "哈尔滨冰雪大世界是黑龙江哈尔滨的一个以冰雕雪雕景观为主的主题公园，是中国哈尔滨国际冰雪节的组成部分之一。哈尔滨冰雪大世界始创于1999年，后定址于松花江北岸太阳岛西区，与太阳岛国际雪雕艺术博览会，兆麟公园冰灯艺术博览会，尚志公园等一起成为哈尔滨冬季旅游的亮点。每年吸引来自国内外的上百万名游客。哈尔滨是世界上冬季气温最低的大城市之一，冬季封冻的松花江提供了丰富的冰可供利用。冰建筑可露天维持两个多月。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/%E5%93%88%E5%B0%94%E6%BB%A8%E5%86%B0%E9%9B%AA%E5%A4%A7%E4%B8%96%E7%95%8C.jpg"
+  },
+  {
+    "name": "中央大街",
+    "city": "哈尔滨",
+    "center": [
+      126.616,
+      45.771
+    ],
+    "category": "历史",
+    "description": "中央大街是黑龙江省哈尔滨市的主要商业街之一。南起于道里区新阳广场，北止于松花江边的防洪纪念塔广场，由方石砖（即俗称的“面包石”）铺成全长1450公尺，宽21.34公尺，亚洲最长的步行街。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/Central_Street_at_West_13th_St_%2820230721112501%29.jpg"
+  },
+  {
+    "name": "鼓浪屿",
+    "city": "厦门",
+    "center": [
+      118.066,
+      24.446
+    ],
+    "category": "历史",
+    "description": "鼓浪屿 是位于中华人民共和国福建省厦门市思明区西南方的一个小岛，行政区划为鼓浪屿街道，面积不到2平方公里（0.77平方哩），人口约2万。有“海上花园”之美称。除环岛电动车外不允许机动车辆上岛。2005年《中国国家地理》杂志将鼓浪屿评为“中国最美的城区”第一名。2017年7月在波兰克拉科夫举行的第41届世界遗产大会上被正式列入《世界遗产名录》。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0f/%E9%BC%93%E6%B5%AA%E5%B1%BF_-_panoramio.jpg"
+  },
+  {
+    "name": "南普陀寺",
+    "city": "厦门",
+    "center": [
+      118.094,
+      24.437
+    ],
+    "category": "历史",
+    "description": "南普陀寺是一座有千余年历史的佛教寺庙，位于中国福建省厦门市东南五老峰下，面临海灣，歷史和规模在廈門市佛寺中僅次于同安梵天禪寺居第二位。因其供奉观世音菩萨，与浙江普陀山观音道场类似，又在普陀山以南而得名。是一间在闽南和东南亚有相当影响力的佛寺，位于厦门市思明区思明南路515号。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d3/%E5%8D%97%E6%99%AE%E9%99%80%E5%AF%BA.jpg"
+  },
+  {
+    "name": "三坊七巷",
+    "city": "福州",
+    "center": [
+      119.294,
+      26.084
+    ],
+    "category": "历史",
+    "description": "三坊七巷位于福建福州鼓樓區，是中国现存面积最大的城中心历史文化街区，以南北走向的南後街为轴，西侧为衣锦坊、文儒坊、光禄坊等“三坊”，东侧为杨桥巷、郎官巷、塔巷、黄巷、安民巷、宫巷、吉庇巷等“七巷”。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/cf/%E4%B8%9C%E7%99%BE%E4%B8%AD%E5%BF%83A%E9%A6%8610%E6%A5%BC%E7%9E%AD%E6%9C%9B%E5%8F%B0%E8%A5%BF%E5%8D%97%E4%B8%89%E5%9D%8A%E4%B8%83%E5%B7%B7.jpg"
+  },
+  {
+    "name": "黄山风景区",
+    "city": "黄山",
+    "center": [
+      118.163,
+      30.13
+    ],
+    "category": "自然",
+    "description": "黄山位于中国安徽省南部黄山市境内，南北长约40公里，东西宽约30公里，山脉面积1200平方公里，核心景区面积约160.6平方公里，主体以花岗岩构成，最高处莲花峰，海拔1864.8米。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/57/%E9%BB%84%E5%B1%B1%E9%A3%8E%E6%99%AF%E5%90%8D%E8%83%9C%E5%8C%BA%E7%AE%A1%E7%90%86%E6%9D%A1%E4%BE%8B.pdf"
+  },
+  {
+    "name": "宏村",
+    "city": "黄山",
+    "center": [
+      117.983,
+      29.903
+    ],
+    "category": "历史",
+    "description": "宏村村是中华人民共和国安徽省黄山市黟县宏村鎮的行政村，位于安徽省南部的黄山脚下，是一座有着大量明清时期历史建筑的古村落。村中还构建了完善的水系和颇具特色的“牛”形布局，是徽州民居的典型代表。2000年，包括宏村在内的皖南古村落在第24届世界遗产委员会上被列为世界文化遗产。2001年，宏村古建筑群被中华人民共和国国务院公布为第五批全国重点文物保护单位之一。2003年，宏村被授予中国历史文化名村称号。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/28/South_Lake_of_Hongcun_20141110.JPG"
+  },
+  {
+    "name": "漓江",
+    "city": "桂林",
+    "center": [
+      110.388,
+      24.85
+    ],
+    "category": "自然",
+    "description": "漓江又名灕水、癸水，位于广西壮族自治区东北部，桂林市境内，属珠江流域西江水系，为支流桂江上游河段的通称。漓江起点为兴安县溶江镇灵渠口，终点为平乐三江口。漓江上游为大溶江，下游即为的桂江。漓江全长164公里，沿江河床多为水质卵石，泥沙量小，水质清澈，两岸多为喀斯特地貌.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/LijiangRiver7.jpg"
+  },
+  {
+    "name": "象鼻山",
+    "city": "桂林",
+    "center": [
+      110.297,
+      25.263
+    ],
+    "category": "自然",
+    "description": "象鼻山又称象山，位于中國廣西桂林市内，桃花江与漓江汇合处，是桂林的城徽。象山公园是桂林最著名的公园之一，以象山为主題。2017，两江四湖·象山景区被评为国家5A级旅游景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/98/Elephant_Trunk_Hill%2C_Guilin.jpg"
+  },
+  {
+    "name": "天涯海角",
+    "city": "三亚",
+    "center": [
+      109.344,
+      18.293
+    ],
+    "category": "自然",
+    "description": "天涯海角是中華人民共和國海南省三亚市的一处海滨风景旅游区，相傳一對情侶只要一起走到天涯海角就可一生一世擁有對方，位于三亚市区西面24千米处。"
+  },
+  {
+    "name": "亚龙湾",
+    "city": "三亚",
+    "center": [
+      109.643,
+      18.193
+    ],
+    "category": "自然",
+    "description": "亚龙湾国家旅游度假区是中华人民共和国海南省三亚市东郊的一处热带海滨风景区，距离市中心区约10公里。鄰近龍坡海軍基地。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/44/Yalong_Bay_01.jpg"
+  },
+  {
+    "name": "泰山",
+    "city": "济南",
+    "center": [
+      117.1,
+      36.254
+    ],
+    "category": "自然",
+    "description": "五岳之首，世界文化与自然双遗产",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/74/%E6%B3%B0%E5%B1%B1_%E5%8D%97%E5%A4%A9%E9%97%A8.jpg"
+  },
+  {
+    "name": "趵突泉",
+    "city": "济南",
+    "center": [
+      117.011,
+      36.657
+    ],
+    "category": "自然",
+    "description": "趵突泉又名槛泉，旧称泺，位于山东省济南市历下区趵突泉街道趵突泉南路1号，为古泺水的源头。三股泉水成一线紧密排列，齐声迸发，声势浩大，因此被乾隆皇帝称为「天下第一泉」，是泉城济南七十二名泉之首，同时也是济南的三大名胜之一（此外有大明湖和千佛山）。“趵突腾空”被古人列为济南八景之一。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Jinan_Baotu_Spring-20150519-RM-165055.jpg"
+  },
+  {
+    "name": "大明湖",
+    "city": "济南",
+    "center": [
+      117.013,
+      36.672
+    ],
+    "category": "自然",
+    "description": "大明湖位于中国山东省济南市历下区，是济南三大历史名胜之一。属于泉水型湖泊，主要由周围的黑虎泉、趵突泉、五龙潭泉群、珍珠泉群等泉水汇流而成，同时也接纳大气降水和西护城河汇集的地表径流。湖泊面积在2010年经过疏浚工程后达到了0.58平方公里，平均水深2米，总蓄水量约为83万立方米。"
+  },
+  {
+    "name": "栈桥",
+    "city": "青岛",
+    "center": [
+      120.317,
+      36.058
+    ],
+    "category": "现代",
+    "description": "棧橋是一种从陆地延伸到水中的结构，也可以看作是陸地伸入水体的一個走道。棧橋可以用作碼頭（突堤碼頭）和防波堤，供船隻停靠。棧橋也需要有足夠的寬度，以便於安置裝卸設備。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/43/Scheveningen2005_3.jpg"
+  },
+  {
+    "name": "崂山",
+    "city": "青岛",
+    "center": [
+      120.619,
+      36.148
+    ],
+    "category": "自然",
+    "description": "崂山，古稱勞山、牢山，是位於中华人民共和国山东省青岛市，黄海之滨的山，主峰巨峰（崂顶）海拔1132.7米，为山东省第三高峰。1982年被国务院設為中国名胜景区之一。其上道教宫观太清宫1983年获称道教全国重点宫观。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Laoshan_Cola_%E5%B4%82%E5%B1%B1%E5%8F%AF%E4%B9%90_02.jpg"
+  },
+  {
+    "name": "八大关",
+    "city": "青岛",
+    "center": [
+      120.345,
+      36.05
+    ],
+    "category": "历史",
+    "description": "八大关位于中华人民共和国山东省青岛市市南区太平山南麓太平角、汇泉角之间，是首批中国历史文化名街和青岛的风景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/be/%E5%85%AB%E5%A4%A7%E5%85%B3%E5%9C%B0%E5%9B%BE.jpg"
+  },
+  {
+    "name": "滇池",
+    "city": "昆明",
+    "center": [
+      102.668,
+      24.834
+    ],
+    "category": "自然",
+    "description": "滇池也称昆明湖、昆明池，古称滇南泽，位于中國雲南省省会昆明市西南部，为云南省面积最大的高原淡水湖，也是中国第六大淡水湖。湖泊海拔高度1886米。形状似胃形。湖底平坦。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Satellite_picture_of_Dian_Lake_-_ISS043-E-162686.jpg"
+  },
+  {
+    "name": "石林",
+    "city": "昆明",
+    "center": [
+      103.274,
+      24.818
+    ],
+    "category": "自然",
+    "description": "石林可以指：\n石林彝族自治县，中国云南省昆明市下辖的一个自治县。\n石林街道，云南省石林彝族自治县下辖的一个街道\n“剑状喀斯特”地貌景观：\n石林风景名胜区，又称为“云南石林”、“路南石林”，位于中国云南省昆明市石林彝族自治县的一处石林。\n梭布垭石林，位于中国湖北省恩施土家族苗族自治州的一处石林。\n万盛石林，位于中国重庆市万盛区内的一处石林。\n黄河石林，位于中国甘肃省白银市景泰县的一处石林\n《魔磁》，又名《石林》，香港科幻作家倪匡创作的衛斯理系列小说之一。\n石林铁路，一条位于河南省安阳市境内的铁路。\n石林 (编剧)，小品编剧，曾担任中国中央电视台春晚总策划\n石林 (1919年)，曾任对外经济联络部副部长，第五届全国人大上海市代表\n石林 (?)，女，第五届全国人大云南省代表",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/3a/CADAL07013341_%E7%9F%B3%E6%9E%97%E7%87%95%E8%AA%9E.djvu"
+  },
+  {
+    "name": "翠湖",
+    "city": "昆明",
+    "center": [
+      102.707,
+      25.044
+    ],
+    "category": "自然",
+    "description": "翠湖是位于云南省昆明市中心城区的一个湖泊，围绕其建设有翠湖公园，被誉为镶嵌在昆明城的绿宝石。湖泊北邻圆通山，东接五华山，水体面积约15公顷，海拔1890米，因其八面水翠，四季竹翠，春夏柳翠，故称“翠湖”。元朝以前，滇池水位较高，翠湖还属于昆明城外的小湖湾，多稻田、菜园、莲池，故称“荷花池”或“菜海子”。因东北面有九股泉，汇流成池，又名“九龙池”。后滇池水位下降，逐渐形成独立湖泊。1918年在此建立了昆明第一个自来水厂。20世纪60、70年代因开挖地下水，翠湖一度干涸。1987年开始抽取盘龙江水回灌，1997年又取昆明市第四污水处理厂之水入湖，恢复水域。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/LRT_Chestwood_Stop.jpg"
+  },
+  {
+    "name": "黔灵山",
+    "city": "贵阳",
+    "center": [
+      106.684,
+      26.6
+    ],
+    "category": "自然",
+    "description": "黔南第一山",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/22/%E9%BB%94%E7%81%B5%E5%B1%B1.jpg"
+  },
+  {
+    "name": "青岩古镇",
+    "city": "贵阳",
+    "center": [
+      106.663,
+      26.354
+    ],
+    "category": "历史",
+    "description": "青岩镇，又称青岩古镇，是中华人民共和国贵州省貴陽市花溪区下辖的一个乡镇级行政单位。\n青岩古镇，贵州四大古镇之一，位于贵阳市南郊，建于明洪武十年（1378年），原为军事要塞。古镇内设计精巧、工艺精湛的明清古建筑交错密布，寺庙、 楼阁画栋雕梁、飞角重檐相间。镇人文荟萃，有历史名人周渔璜、清末状元赵以炯（贵州历史上第一个文状元）。镇内有近代史上震惊中外的青岩教案遗址、赵状元府第、平刚先生故居、红军长征作战指挥部等历史文物。周恩来的父亲、邓颖超的母亲、李克农等革命前辈及其家属均在青岩秘密居住过。青岩古镇还是抗战期间浙江大学的西迁办学点之一。 2005年9月青岩古镇景区被建设部、国家文物局公布为第二批中国历史文化名镇。2013年在顶峰国际非物质文化遗产保护与传承旅游规划项目中被誉为中国最具魅力小镇之一。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ed/%E9%9D%92%E5%B2%A9%E5%8F%A4%E9%95%87%2C_%E8%B4%B5%E5%B7%9E_202403.jpg"
+  },
+  {
+    "name": "布达拉宫",
+    "city": "拉萨",
+    "center": [
+      91.117,
+      29.657
+    ],
+    "category": "历史",
+    "description": "布达拉宫 坐落在中华人民共和国西藏自治區首府拉萨市区西北的玛布日山（红山）上，是一座规模宏大的宫殿式建筑群，最初是吐蕃王朝第三十三代藏王松赞干布兴建。於17世纪重建后，成为历代达赖喇嘛的冬宫居所，為西藏政教合一的统治中心。整座宫殿具有鲜明的藏族风格，依山而建，气势雄伟。布达拉宫建筑内保存有大量珍贵的文物、雕塑、壁画及各类艺术品，具有很高的历史、艺术与科学价值。1961年被中华人民共和国国务院列入第一批全国重点文物保护单位。1994年，布达拉宫作为“拉萨布达拉宫历史建筑群”的组成部分被联合国教科文组织列入世界文化遗产名录。目前，该处也是对公众开放的重要文化旅游景点。 2013年获评5A级景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Potala.jpg"
+  },
+  {
+    "name": "大昭寺",
+    "city": "拉萨",
+    "center": [
+      91.132,
+      29.652
+    ],
+    "category": "历史",
+    "description": "大昭寺是中国西藏自治区拉萨市中心的一座藏传佛教寺院，位于中国西藏自治区拉萨市老城区八廓街，该寺院在藏传佛教中拥有至高无上的地位。2000年，大昭寺作为布达拉宫的扩展项目被列为世界文化遗产。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Jokhang_Temple_in_Tibet.jpg"
+  },
+  {
+    "name": "张家界国家森林公园",
+    "city": "张家界",
+    "center": [
+      110.434,
+      29.32
+    ],
+    "category": "自然",
+    "description": "張家界國家森林公園是位于中华人民共和国湖南省张家界市的国家森林公园。它是武陵源風景名勝區内的几个国家公园之一。張家界國家森林公園面积一百三十平方公里，是中国第一个国家森林公园，建於1982年。它地处武陵山中，有石峰2000多座，森林覆盖率达88％，四周山地环抱，气候暖湿。区内有黄狮寨、砂刀沟、金鞭岩、金鞭溪等景点。有黄狮寨、金鞭溪、腰子寨、琵琶溪、砂刀沟、后花园、朝天观七条主要旅游线。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Zhangjiajie_National_Forest_Park_%E5%BC%A0%E5%AE%B6%E7%95%8C%E5%9B%BD%E5%AE%B6%E6%A3%AE%E6%9E%97%E5%85%AC%E5%9B%AD%2C_Hunan%2C_2023_%2852669865292%29.jpg"
+  },
+  {
+    "name": "天门山",
+    "city": "张家界",
+    "center": [
+      110.479,
+      29.052
+    ],
+    "category": "自然",
+    "description": "天门山 坐落在中国湖南省张家界市永定区，因天门洞而得名，被稱为“湘西第一神山”、“武陵之魂”和“张家界之魂”。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4d/%E5%A4%A9%E9%97%A8%E5%B1%B1-%E5%A4%A9%E9%97%A8%E6%B4%9E_-_panoramio.jpg"
+  },
+  {
+    "name": "丽江古城",
+    "city": "丽江",
+    "center": [
+      100.233,
+      26.872
+    ],
+    "category": "历史",
+    "description": "丽江古城（或称丽江古镇），位於中华人民共和国云南省麗江市古城區，1997年12月4日被联合国教科文组织列為世界文化遗产，並於2007年获亞太區文物古蹟保護獎。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/27/Lijiang_Yunnan_Heritage-shops-in-old-town-01.jpg"
+  },
+  {
+    "name": "玉龙雪山",
+    "city": "丽江",
+    "center": [
+      100.187,
+      27.118
+    ],
+    "category": "自然",
+    "description": "玉龍雪山是雲南省麗江市玉龍納西族自治縣的一个南北向山脉，位于橫斷山脉的沙魯裏山南段，海拔5596m。雪山山腰雲騰霧繞，遠望像一條銀白色的巨龍，因此得名。為納西族的神山和聚居地之一；納西族人稱雪山爲“歐魯”，意爲“銀色的山岩”。雪山南北長35公里，東西寬13公里，主峰扇子陡海拔5596米。是中华人民共和国乃至欧亚大陆现今最南端的终年积雪雪山。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/15/Lijiang_Yunnan_China-Naxi-people-carrying-baskets-01.jpg"
+  },
+  {
+    "name": "橘子洲",
+    "city": "长沙",
+    "center": [
+      112.956,
+      28.196
+    ],
+    "category": "现代",
+    "description": "橘子洲坐落在湖南省长沙市岳麓区湘江中央，是一个狭长的沙洲，又名桔子洲、桔洲、橘洲、水陆洲。南北全长约5公里；东西最宽处约320米，最窄约170米。洲上有居民居住，现因为整体规划已迁出许多。橘子洲于2001年成为长沙岳麓山风景名胜区橘子洲景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/%E9%95%BF%E6%B2%99%E6%A9%98%E5%AD%90%E6%B4%B2.jpg"
+  },
+  {
+    "name": "岳麓山",
+    "city": "长沙",
+    "center": [
+      112.939,
+      28.18
+    ],
+    "category": "自然",
+    "description": "嶽麓山坐落在湖南省长沙市的湘江西岸，占地面积35.2（一说36）平方公里，最高峰云麓峰，又名灵麓峰。海拔300.8米，是南嶽衡山之72峰之一，南北朝时的《南嶽记》就提到：“南嶽周围八百里，回雁为首，嶽麓为足”。"
+  },
+  {
+    "name": "岳阳楼",
+    "city": "长沙",
+    "center": [
+      113.098,
+      29.37
+    ],
+    "category": "历史",
+    "description": "岳阳楼是一座位于中國湖南省岳阳市古城西门之上的古城楼，下临洞庭，前望君山，北倚长江，主要因范仲淹《岳阳楼记》而闻名，有“洞庭天下水，岳阳天下楼”的盛誉。岳阳楼始建于公元220年前后，其前身相传为三国时期东吴大将鲁肃的“阅军楼”，西晋南北朝时称“巴陵城楼”，中唐始称“岳阳楼”。岳阳楼是江南三大名楼中唯一的一座保持原貌的古建筑。1988年1月被中国国务院确定为全国重点文物保护单位，2001年被评定为国家5A级景区。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/14/A_scale_model_of_Yueyang_Tower_in_Yueyang%2C_Hunan%2C_China.jpg"
+  },
+  {
+    "name": "瘦西湖",
+    "city": "扬州",
+    "center": [
+      119.425,
+      32.418
+    ],
+    "category": "自然",
+    "description": "瘦西湖位于中国江苏省扬州市广陵区，扬州旧城北门外至蜀岗一带，现为“蜀冈-瘦西湖风景名胜区”核心区域。该湖最初由唐代扬州的城市护城河逐渐发展而成。 目前总面积有约2000亩，水上面积约700亩，而游览区面积有100公顷。明清时期，湖岸一带聚集了大量当地士绅、盐商与官员着造园匠人所建的园林与别业，在清乾隆年间清高宗巡視江南时到达顶峰，使瘦西湖成为名胜风景。 民国初年时朱自清曾在散文《说扬州》《夏日的扬州》中提及蜀冈二十四桥风景，夏季在瘦西湖游船赏景在当时亦十分流行。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Thin_West_Lake_south_entrance.JPG"
+  },
+  {
+    "name": "拙政园",
+    "city": "苏州",
+    "center": [
+      120.629,
+      31.325
+    ],
+    "category": "历史",
+    "description": "拙政园，是中国江南一座园林，位于江苏省苏州市姑蘇區平江街道东北街178号，始建于明朝正德年间，初為御史王獻臣改佛寺以建。它是中国园林的杰出代表，中国四大名园之一，亦是江南私家花园典范。拙政园1961年被国务院列为首批全国重点文物保护单位，1991年被国家计委、旅游局、建设部列为国家级特殊游览参观点，1997年被联合国教科文组织与其它数座园林一同列为世界文化遗产。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/%E6%8B%99%E6%94%BF%E5%9B%AD%E8%A7%81%E5%B1%B1%E6%A5%BC2024.11_%283%29.jpg"
+  },
+  {
+    "name": "虎丘",
+    "city": "苏州",
+    "center": [
+      120.573,
+      31.323
+    ],
+    "category": "历史",
+    "description": "虎丘是中國江苏苏州的山丘，山丘上及附近有多處古跡。虎丘在古代有“吴中第一名胜”之誉。宋代苏东坡曾有“到苏州不游虎丘乃憾事也”的赞誉。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d2/2024-Apr_Suzhou_-_Tiger_Hill_Scenic_Area_%28Hu_Qiu%29_%E8%99%8E%E4%B8%98_-_img_02.jpg"
+  },
+  {
+    "name": "周庄",
+    "city": "苏州",
+    "center": [
+      120.845,
+      31.112
+    ],
+    "category": "历史",
+    "description": "周庄，是中华人民共和国江苏省苏州市昆山市下辖的一个行政建制镇。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Zhouzhuang_2.jpg"
+  },
+  {
+    "name": "龙门石窟",
+    "city": "洛阳",
+    "center": [
+      112.47,
+      34.57
+    ],
+    "category": "历史",
+    "description": "龙门石窟位于中华人民共和国河南省洛阳市南郊12公里处的伊水两岸的龙门山和香山崖壁上，主要开凿于北魏至北宋的四百余年间，至今仍存有窟龛（或稱壁龕）2100多个，造像10万余尊，碑刻题记3600余品，多在伊水西岸。数量之多位于中国各大石窟之首。其中“龙门二十品”是書法魏碑精华，唐代书法家褚遂良所书的“伊阙佛龛之碑”则是初唐楷书艺术的典范。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Longmen_Grottoes_3.jpg"
+  },
+  {
+    "name": "白马寺",
+    "city": "洛阳",
+    "center": [
+      112.572,
+      34.734
+    ],
+    "category": "历史",
+    "description": "白马寺位于河南省洛阳老城以东21公里处，北依邙山，南临洛河，创建于东汉永平十一年（公元68年），是佛教传入中国后兴建的第一座寺院，白马寺建立之后，中国“僧院”便泛称为“寺”，白马寺也因此被认为是中国佛教的发源地，有中国佛教的“祖庭”和“释源”之称。寺内保存了大量元代夹纻干漆造像如三世佛、二天将、十八罗汉等，弥足珍贵。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/dd/27495-Luoyang%2C_White_Horse_Temple.jpg"
+  },
+  {
+    "name": "三峡大坝",
+    "city": "宜昌",
+    "center": [
+      111.003,
+      30.83
+    ],
+    "category": "现代",
+    "description": "长江三峡水利枢纽工程，简称三峡工程或三峡大坝，是中华人民共和国长江上游段建设的大型水利工程项目。分布在重庆市到湖北省宜昌市的长江干流上，大坝位于长江三峡西陵峡内的宜昌市夷陵区三斗坪，并和其下游38公里的葛洲坝水电站形成梯级调度电站。它是世界上规模最大的水电站，是中国有史以来建造的最大的水坝。",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ab/ThreeGorgesDam-China2009.jpg"
+  }
 ]
