@@ -509,6 +509,46 @@ body {
 .count-badge.metro { background: rgba(52,152,219,0.1); color: var(--metro-color); }
 .count-badge.spots { background: rgba(46,204,113,0.1); color: var(--spots-color); }
 
+/* ===== Map Mode Toggle ===== */
+.map-mode-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-dark);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all var(--transition);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  user-select: none;
+}
+
+.map-mode-toggle:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.map-mode-toggle.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.map-mode-toggle.active:hover {
+  background: var(--accent-hover);
+}
+
+/* Offset when detail panel is open */
+.detail-panel:not(.hidden) ~ .map-mode-toggle {
+  right: calc(var(--detail-width) + 16px);
+}
+
 /* ===== Status Bar ===== */
 .status-bar {
   position: fixed;

@@ -44,6 +44,22 @@ const MapManager = {
   fitBounds(bounds) {
     this.map.setBounds(bounds, false, [60, 60, 60, 60]);
   },
+
+  // 纯净模式：隐藏底图杂项，只保留省界/水系/自定义覆盖物
+  _cleanMode: false,
+
+  toggleCleanMode() {
+    if (this._cleanMode) {
+      // 恢复标准模式
+      this.map.setFeatures(['bg', 'road', 'building', 'point']);
+      this._cleanMode = false;
+    } else {
+      // 纯净模式：只显示背景（含省界、水系）
+      this.map.setFeatures(['bg']);
+      this._cleanMode = true;
+    }
+    return this._cleanMode;
+  },
 };
 
 // ==================== Data Manager ====================
@@ -421,6 +437,7 @@ const UIController = {
       detailClose: document.getElementById('detail-close'),
       statusText: document.getElementById('status-text'),
       zoomLevel: document.getElementById('zoom-level'),
+      mapModeToggle: document.getElementById('map-mode-toggle'),
     };
 
     this._bindEvents();
@@ -458,6 +475,14 @@ const UIController = {
     // ESC 关闭详情
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.hideDetail();
+    });
+
+    // 纯净模式切换
+    this.elements.mapModeToggle.addEventListener('click', () => {
+      const isClean = MapManager.toggleCleanMode();
+      this.elements.mapModeToggle.classList.toggle('active', isClean);
+      this.elements.mapModeToggle.textContent = isClean ? '标准模式' : '纯净模式';
+      this.updateMapModeStatus(isClean);
     });
   },
 
@@ -757,6 +782,11 @@ const UIController = {
 
   updateZoomLevel(zoom) {
     this.elements.zoomLevel.textContent = `缩放: ${zoom.toFixed(1)}`;
+  },
+
+  updateMapModeStatus(isClean) {
+    const modeLabel = isClean ? '纯净模式' : '标准模式';
+    this.elements.statusText.textContent = `地图: ${modeLabel}`;
   },
 };
 
