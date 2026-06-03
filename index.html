@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全国交通旅游地图</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- 高德地图 JS API 2.0 —— 请将 YOUR_AMAP_KEY 替换为你自己的高德 Web 服务 Key -->
+  <script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY&plugin=AMap.PlaceSearch,AMap.AutoComplete"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- 左侧控制面板 -->
+    <aside id="sidebar">
+      <header class="sidebar-header">
+        <h1>交通旅游地图</h1>
+        <span class="subtitle">高铁 · 地铁 · 景点</span>
+      </header>
+
+      <!-- 图层开关 -->
+      <section class="panel">
+        <h2 class="panel-title">图层</h2>
+        <div class="layer-toggles">
+          <label class="toggle-item active" data-layer="hsr">
+            <span class="toggle-dot" style="background:#e74c3c"></span>
+            <span class="toggle-label">高铁线路</span>
+            <input type="checkbox" checked data-layer-toggle="hsr">
+          </label>
+          <label class="toggle-item" data-layer="metro">
+            <span class="toggle-dot" style="background:#3498db"></span>
+            <span class="toggle-label">地铁线路</span>
+            <input type="checkbox" data-layer-toggle="metro">
+          </label>
+          <label class="toggle-item" data-layer="spots">
+            <span class="toggle-dot" style="background:#2ecc71"></span>
+            <span class="toggle-label">著名景点</span>
+            <input type="checkbox" data-layer-toggle="spots">
+          </label>
+        </div>
+      </section>
+
+      <!-- 搜索 -->
+      <section class="panel">
+        <h2 class="panel-title">搜索城市</h2>
+        <div class="search-box">
+          <input type="text" id="city-search" placeholder="输入城市名…" autocomplete="off">
+          <div id="search-results" class="search-results hidden"></div>
+        </div>
+      </section>
+
+      <!-- 快捷城市 -->
+      <section class="panel">
+        <h2 class="panel-title">热门城市</h2>
+        <div id="quick-cities" class="city-chips"></div>
+      </section>
+
+      <!-- 城市列表 -->
+      <section class="panel panel-scroll">
+        <h2 class="panel-title">全部城市 <span id="city-count" class="badge"></span></h2>
+        <ul id="city-list" class="city-list"></ul>
+      </section>
+    </aside>
+
+    <!-- 地图容器 -->
+    <main id="map-container"></main>
+
+    <!-- 右侧详情面板 -->
+    <div id="detail-panel" class="detail-panel hidden">
+      <button id="detail-close" class="detail-close" title="关闭">×</button>
+      <div id="detail-content"></div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <footer id="status-bar" class="status-bar">
+      <span id="status-text">就绪</span>
+      <span id="zoom-level">缩放: -</span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
