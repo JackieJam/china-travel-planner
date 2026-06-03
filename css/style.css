@@ -637,6 +637,213 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== Train Card (Station Detail) ===== */
+.train-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.train-card {
+  padding: 8px 10px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  border: 1px solid transparent;
+}
+
+.train-card:hover {
+  background: #eef1f5;
+  border-color: #ddd;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.train-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.train-number {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #fff;
+}
+
+.train-number.g-type { background: #E63946; }
+.train-number.d-type { background: #457B9D; }
+.train-number.c-type { background: #2A9D8F; }
+.train-number.k-type { background: #A0522D; }
+
+.train-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.train-route-brief {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===== Train Detail Route (Timeline) ===== */
+.train-journey-time {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  background: #f0f2f5;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.train-detail-route {
+  position: relative;
+  padding-left: 16px;
+}
+
+.train-detail-route::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: #ddd;
+  border-radius: 1px;
+}
+
+.train-route-stop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  position: relative;
+}
+
+.train-route-stop.highlighted {
+  background: rgba(74,144,217,0.06);
+  border-radius: var(--radius-sm);
+  margin-left: -4px;
+  padding-left: 4px;
+  margin-right: -4px;
+  padding-right: 4px;
+}
+
+.route-stop-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 48px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.arrive-time { font-weight: 500; }
+.depart-time { font-weight: 500; color: var(--accent); }
+
+.route-stop-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--hsr-color);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.train-route-stop:first-child .route-stop-marker {
+  background: var(--hsr-color);
+}
+
+.train-route-stop:last-child .route-stop-marker {
+  background: var(--hsr-color);
+}
+
+.route-stop-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* ===== Clear Highlight Button ===== */
+.btn-clear-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #e74c3c;
+  background: rgba(231,76,60,0.06);
+  border: 1px solid rgba(231,76,60,0.2);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-clear-highlight:hover {
+  background: rgba(231,76,60,0.12);
+  border-color: #e74c3c;
+}
+
+.btn-clear-highlight:disabled {
+  color: #aaa;
+  background: #f5f5f5;
+  border-color: #ddd;
+  cursor: default;
+}
+
+/* ===== Line Filters ===== */
+.line-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+  border: 1.5px solid transparent;
+  color: var(--text-primary);
+}
+
+.filter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Active filter chips: solid background */
+.filter-chip.active[data-filter="G"] { background: rgba(230,57,70,0.2); border-color: #E63946; color: #E63946; }
+.filter-chip.active[data-filter="D"] { background: rgba(69,123,157,0.2); border-color: #457B9D; color: #457B9D; }
+.filter-chip.active[data-filter="C"] { background: rgba(42,157,143,0.2); border-color: #2A9D8F; color: #2A9D8F; }
+.filter-chip.active[data-filter="K"] { background: rgba(160,82,45,0.2); border-color: #A0522D; color: #A0522D; }
+
+/* Inactive filter chips: outlined style */
+.filter-chip:not(.active) {
+  background: transparent;
+  border-color: rgba(255,255,255,0.15);
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.filter-chip:not(.active) .filter-dot { opacity: 0.4; }
+.filter-chip:not(.active):hover { opacity: 1; border-color: rgba(255,255,255,0.3); }
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   :root { --sidebar-width: 260px; --detail-width: 100vw; }

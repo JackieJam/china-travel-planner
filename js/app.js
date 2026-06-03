@@ -161,6 +161,7 @@ const DataManager = {
   hsr: [],
   metro: [],
   spots: [],
+  trains: [],
 
   async loadAll() {
     UIController.setStatus('加载数据中…');
@@ -175,7 +176,19 @@ const DataManager = {
       this.hsr = hsr;
       this.metro = metro;
       this.spots = spots;
-      UIController.setStatus(`已加载 ${cities.length} 城市, ${hsr.length} 高铁线, ${metro.length} 城市地铁, ${spots.length} 景点`);
+
+      // Load trains data separately (graceful fallback if not available yet)
+      try {
+        const trains = await this._fetch('data/trains.json');
+        this.trains = trains;
+      } catch (trainErr) {
+        console.warn('车次数据加载失败（可忽略）:', trainErr);
+        this.trains = [];
+      }
+
+      const trainCount = this.trains.length;
+      const trainInfo = trainCount > 0 ? `, ${trainCount} 车次` : '';
+      UIController.setStatus(`已加载 ${cities.length} 城市, ${hsr.length} 高铁线, ${metro.length} 城市地铁, ${spots.length} 景点${trainInfo}`);
     } catch (err) {
       console.error('数据加载失败:', err);
       UIController.setStatus('数据加载失败，请检查 JSON 文件');
@@ -214,6 +227,18 @@ const DataManager = {
   getCitySpots(cityName) {
     return this.spots.filter(s => s.city === cityName);
   },
+
+  getStationTrains(stationName) {
+    if (!this.trains || !this.trains.length) return [];
+    return this.trains.filter(t =>
+      t.route.some(s => s.station === stationName || s.station.includes(stationName))
+    );
+  },
+
+  getTrainByNumber(number) {
+    if (!this.trains || !this.trains.length) return null;
+    return this.trains.find(t => t.number === number);
+  },
 };
 
 // ==================== Layer Manager ====================
@@ -221,6 +246,10 @@ const LayerManager = {
   // 图层状态
   visible: { hsr: true, metro: false, spots: false },
   selectedCity: null,
+
+  // 车次高亮状态
+  _highlightedTrain: null,
+  _trainHighlight: [],
 
   // 高德地图覆盖物
   overlays: {
@@ -263,6 +292,62 @@ const LayerManager = {
     // 缩放级别变化时可以调整标注可见性
     const showHSRLabels = zoom >= 5;
     this._setOverlaysVisible(this.overlays.hsrLabels, showHSRLabels && this.visible.hsr);
+
+    // Control line visibility by zoom level and importance
+    this.overlays.hsrLines.forEach(line => {
+      const data = line.getExtData();
+      const importance = data ? data.importance : 1;
+      let show = false;
+      if (zoom >= 8) show = true;
+      else if (zoom >= 7 && importance <= 3) show = true;
+      else if (zoom >= 5 && importance <= 2) show = true;
+      else if (importance <= 1) show = true;
+
+      // Also check line type filter state
+      const lineType = data ? data.lineType : 'G';
+      if (show && this.visible.hsr && this._lineFilterVisible(lineType)) {
+        line.show();
+      } else {
+        line.hide();
+      }
+    });
+  },
+
+  // Line type filter state (all visible by default)
+  _lineFilters: { G: true, D: true, C: true, K: true },
+
+  _lineFilterVisible(lineType) {
+    return this._lineFilters[lineType] !== false;
+  },
+
+  setLineFilter(type, visible) {
+    this._lineFilters[type] = visible;
+    this._applyLineFilters();
+  },
+
+  _applyLineFilters() {
+    const zoom = MapManager.currentZoom;
+    this.overlays.hsrLines.forEach(line => {
+      const data = line.getExtData();
+      const lineType = data ? data.lineType : 'G';
+      const importance = data ? data.importance : 1;
+
+      // Check zoom-based visibility
+      let showByZoom = false;
+      if (zoom >= 8) showByZoom = true;
+      else if (zoom >= 7 && importance <= 3) showByZoom = true;
+      else if (zoom >= 5 && importance <= 2) showByZoom = true;
+      else if (importance <= 1) showByZoom = true;
+
+      // Check filter visibility
+      const showByFilter = this._lineFilterVisible(lineType);
+
+      if (showByZoom && showByFilter && this.visible.hsr) {
+        line.show();
+      } else {
+        line.hide();
+      }
+    });
   },
 
   selectCity(cityName) {
@@ -351,24 +436,52 @@ const LayerManager = {
     const map = MapManager.map;
     const labeledStations = new Set();
 
+    // Importance levels based on line type / name
+    const trunkLines = ['京沪', '京广', '京哈', '沪昆', '沿海', '京港', '沪宁', '京津'];
+    function getImportance(line) {
+      // Level 1: trunk HSR lines
+      if (trunkLines.some(name => line.name.includes(name))) return 1;
+      // Level 2: G-type (高铁)
+      if (line.type === 'G' || line.name.includes('高铁')) return 2;
+      // Level 3: D-type or C-type (动车/城际)
+      if (line.type === 'D' || line.type === 'C' || line.name.includes('城际') || line.name.includes('动车')) return 3;
+      // Level 4: K-type or other fast rail
+      return 4;
+    }
+
     DataManager.hsr.forEach(line => {
       // 提取站点坐标组成线路路径
       const path = line.stations.map(s => s.center);
       if (path.length < 2) return;
 
+      const importance = getImportance(line);
+
       const polyline = new AMap.Polyline({
         path: path,
         strokeColor: line.color,
         strokeWeight: 3,
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.5,
         lineJoin: 'round',
         lineCap: 'round',
         zIndex: 50,
-        extData: line,
+        extData: { ...line, importance: importance, lineType: line.type || 'G' },
       });
 
       polyline.on('click', () => {
         UIController.showHSRDetail(line);
+      });
+
+      // Hover highlight
+      polyline.on('mouseover', () => {
+        polyline.setOptions({ strokeWeight: 5, strokeOpacity: 1 });
+        polyline.setzIndex(100);
+      });
+
+      polyline.on('mouseout', () => {
+        // Don't reset if there's an active train highlight dimming lines
+        if (LayerManager._highlightedTrain) return;
+        polyline.setOptions({ strokeWeight: 3, strokeOpacity: 0.5 });
+        polyline.setzIndex(50);
       });
 
       map.add(polyline);
@@ -569,6 +682,78 @@ const LayerManager = {
     });
   },
 
+  // ---- Train Highlight ----
+  highlightTrain(trainNumber) {
+    // Clear previous highlight
+    this._clearTrainHighlight();
+
+    const train = DataManager.getTrainByNumber(trainNumber);
+    if (!train) return;
+
+    this._highlightedTrain = train;
+
+    // Draw the train's route as a thick, brightly colored polyline
+    const path = train.route
+      .filter(s => s.arrive || s.depart)
+      .map(s => s.center);
+    if (path.length < 2) return;
+
+    const typeColors = { G: '#FF0000', D: '#0066FF', C: '#00AA00', K: '#FF6600' };
+    const color = typeColors[train.type] || '#FF0000';
+
+    // Dim all other lines
+    this._dimAllLines();
+
+    // Draw highlighted route
+    const polyline = new AMap.Polyline({
+      path: path,
+      strokeColor: color,
+      strokeWeight: 6,
+      strokeOpacity: 1,
+      lineJoin: 'round',
+      zIndex: 200,
+    });
+
+    MapManager.map.add(polyline);
+    this._trainHighlight.push(polyline);
+
+    // Add station markers along the route
+    train.route.forEach(s => {
+      if (!s.arrive && !s.depart) return; // Skip passed-through stations
+      const marker = new AMap.Marker({
+        position: s.center,
+        content: `<div style="background:${color};color:#fff;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;white-space:nowrap;">${s.station}</div>`,
+        offset: new AMap.Pixel(-20, -10),
+        zIndex: 210,
+      });
+      MapManager.map.add(marker);
+      this._trainHighlight.push(marker);
+    });
+
+    // Fit map to the route
+    if (path.length >= 2) {
+      MapManager.map.setBounds(new AMap.Bounds(
+        [Math.min(...path.map(p => p[0])) - 0.5, Math.min(...path.map(p => p[1])) - 0.5],
+        [Math.max(...path.map(p => p[0])) + 0.5, Math.max(...path.map(p => p[1])) + 0.5]
+      ));
+    }
+  },
+
+  _clearTrainHighlight() {
+    this._trainHighlight.forEach(o => MapManager.map.remove(o));
+    this._trainHighlight = [];
+    this._highlightedTrain = null;
+    this._restoreAllLines();
+  },
+
+  _dimAllLines() {
+    this.overlays.hsrLines.forEach(l => l.setOptions({ strokeOpacity: 0.15 }));
+  },
+
+  _restoreAllLines() {
+    this.overlays.hsrLines.forEach(l => l.setOptions({ strokeOpacity: 0.5 }));
+  },
+
   // ---- Utility ----
   _setOverlaysVisible(overlays, visible) {
     overlays.forEach(o => {
@@ -651,6 +836,15 @@ const UIController = {
       this.elements.mapModeToggle.classList.toggle('active', isClean);
       this.elements.mapModeToggle.textContent = isClean ? '标准模式' : '纯净模式';
       this.updateMapModeStatus(isClean);
+    });
+
+    // 线路筛选
+    document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const type = chip.dataset.filter;
+        const isActive = chip.classList.toggle('active');
+        LayerManager.setLineFilter(type, isActive);
+      });
     });
   },
 
@@ -853,8 +1047,108 @@ const UIController = {
     });
     html += '</div>';
 
+    // Train services passing through this station
+    const trains = DataManager.getStationTrains(station.name);
+    if (trains.length > 0) {
+      const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
+      const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
+      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length})</h3>`;
+      html += `<div class="train-list">`;
+      trains.forEach(train => {
+        const typeClass = (train.type || 'G').toLowerCase() + '-type';
+        const routeStations = train.route.filter(s => s.arrive || s.depart);
+        const startStation = routeStations.length > 0 ? routeStations[0].station : '';
+        const endStation = routeStations.length > 1 ? routeStations[routeStations.length - 1].station : '';
+
+        // Find arrival/departure time at this station
+        const stationStop = train.route.find(s => s.station === station.name || s.station.includes(station.name));
+        let timeStr = '';
+        if (stationStop) {
+          if (stationStop.depart) timeStr = stationStop.depart + '发';
+          else if (stationStop.arrive) timeStr = stationStop.arrive + '到';
+        }
+
+        html += `<div class="train-card" data-train="${train.number}">
+          <div class="train-header">
+            <span class="train-number ${typeClass}">${train.number}</span>
+            <span class="train-time">${timeStr}</span>
+          </div>
+          <div class="train-route-brief">${startStation} → ${endStation}</div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+
     this.elements.detailContent.innerHTML = html;
     this.elements.detailPanel.classList.remove('hidden');
+
+    // Train card click handlers
+    this.elements.detailContent.querySelectorAll('.train-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const trainNumber = card.dataset.train;
+        LayerManager.highlightTrain(trainNumber);
+        const train = DataManager.getTrainByNumber(trainNumber);
+        if (train) {
+          UIController.showTrainDetail(train);
+        }
+      });
+    });
+  },
+
+  showTrainDetail(train) {
+    const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
+    const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
+    const color = typeColorMap[train.type] || '#E63946';
+    const typeLabel = typeLabelMap[train.type] || '高铁';
+
+    let html = `<h2>${train.number}</h2>`;
+    html += `<div class="city-meta">${typeLabel} · ${train.route.length}个站点</div>`;
+
+    // Calculate total journey time
+    const routeStations = train.route.filter(s => s.arrive || s.depart);
+    if (routeStations.length >= 2) {
+      const firstTime = routeStations[0].depart || routeStations[0].arrive || '';
+      const lastTime = routeStations[routeStations.length - 1].arrive || routeStations[routeStations.length - 1].depart || '';
+      if (firstTime && lastTime) {
+        html += `<div class="train-journey-time">全程: ${firstTime} — ${lastTime}</div>`;
+      }
+    }
+
+    // Clear highlight button
+    html += `<button class="btn-clear-highlight" id="btn-clear-train-highlight">取消高亮</button>`;
+
+    // Full route with timeline style
+    html += `<div class="section"><h3><span class="dot" style="background:${color}"></span>途经站点</h3>`;
+    html += `<div class="train-detail-route">`;
+    train.route.forEach((s, i) => {
+      if (!s.arrive && !s.depart) return; // Skip non-stopping stations
+      const isCurrentHighlight = LayerManager._highlightedTrain &&
+        LayerManager._highlightedTrain.number === train.number;
+      const highlightClass = isCurrentHighlight ? ' highlighted' : '';
+
+      html += `<div class="train-route-stop${highlightClass}">
+        <div class="route-stop-time">
+          <span class="arrive-time">${s.arrive || '--:--'}</span>
+          <span class="depart-time">${s.depart || '--:--'}</span>
+        </div>
+        <div class="route-stop-marker"></div>
+        <div class="route-stop-name">${s.station}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    this.elements.detailContent.innerHTML = html;
+    this.elements.detailPanel.classList.remove('hidden');
+
+    // Clear highlight button handler
+    const clearBtn = document.getElementById('btn-clear-train-highlight');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        LayerManager._clearTrainHighlight();
+        clearBtn.textContent = '已取消高亮';
+        clearBtn.disabled = true;
+      });
+    }
   },
 
   showMetroLineDetail(line, cityName) {
