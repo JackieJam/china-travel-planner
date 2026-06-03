@@ -532,8 +532,18 @@ const UIController = {
     const metroData = DataManager.getCityMetro(cityName);
     const spots = DataManager.getCitySpots(cityName);
 
-    let html = `<h2>${city.name}</h2>`;
+    // Back button
+    let html = `<button class="btn-back-national" id="btn-back-national">← 返回全国视图</button>`;
+
+    html += `<h2>${city.name}</h2>`;
     html += `<div class="city-meta">${city.province || ''} · ${city.description || ''}</div>`;
+
+    // Summary counts
+    html += `<div class="city-summary-counts">`;
+    if (hsrLines.length) html += `<span class="count-badge hsr">🚄 高铁 ${hsrLines.length}</span>`;
+    if (metroData) html += `<span class="count-badge metro">🚇 地铁 ${metroData.lines.length}</span>`;
+    if (spots.length) html += `<span class="count-badge spots">📍 景点 ${spots.length}</span>`;
+    html += `</div>`;
 
     // 高铁信息
     if (hsrLines.length) {
@@ -561,16 +571,40 @@ const UIController = {
       html += '</div>';
     }
 
-    // 景点信息
+    // 景点信息 (with thumbnails)
     if (spots.length) {
+      const bgColors = {
+        '自然风光': '#27ae60', '历史古迹': '#8e44ad', '文化遗产': '#8e44ad',
+        '现代建筑': '#2980b9', '主题乐园': '#e67e22', '博物馆': '#16a085',
+        '宗教圣地': '#d35400', '海滨度假': '#3498db', '古镇': '#7f8c8d',
+      };
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--spots-color)"></span>著名景点 (${spots.length}个)</h3>`;
       spots.forEach(spot => {
         const tag = spot.category ? `<span class="spot-tag">${spot.category}</span>` : '';
-        html += `<div class="spot-card" data-spot="${spot.name}">
-          <div class="spot-name">${spot.name}${tag}</div>
-          <div class="spot-meta">${spot.description || ''}</div>
-        </div>`;
+        const hasThumb = spot.image || (spot.images && spot.images.length > 0);
+        const thumbSrc = spot.image || (spot.images && spot.images[0]);
+        const descPreview = (spot.description || '').slice(0, 40);
+
+        if (hasThumb) {
+          html += `<div class="spot-card with-thumb" data-spot="${spot.name}">
+            <img class="spot-thumb" src="${thumbSrc}" alt="${spot.name}" loading="lazy"
+                 onerror="this.outerHTML='<div class=\\'spot-thumb-placeholder\\' style=\\'background:${bgColors[spot.category] || '#4a90d9'}\\'>📍</div>'">
+            <div class="spot-info">
+              <div class="spot-name">${spot.name}${tag}</div>
+              <div class="spot-meta">${descPreview}</div>
+            </div>
+          </div>`;
+        } else {
+          const bg = bgColors[spot.category] || '#4a90d9';
+          html += `<div class="spot-card with-thumb" data-spot="${spot.name}">
+            <div class="spot-thumb-placeholder" style="background:${bg}">📍</div>
+            <div class="spot-info">
+              <div class="spot-name">${spot.name}${tag}</div>
+              <div class="spot-meta">${descPreview}</div>
+            </div>
+          </div>`;
+        }
       });
       html += '</div>';
     }
@@ -578,11 +612,19 @@ const UIController = {
     this.elements.detailContent.innerHTML = html;
     this.elements.detailPanel.classList.remove('hidden');
 
-    // 景点卡片点击定位
+    // Back button
+    document.getElementById('btn-back-national').addEventListener('click', () => {
+      LayerManager.resetView();
+    });
+
+    // 景点卡片点击定位 + 打开详情
     this.elements.detailContent.querySelectorAll('.spot-card').forEach(card => {
       card.addEventListener('click', () => {
         const spot = DataManager.spots.find(s => s.name === card.dataset.spot);
-        if (spot) MapManager.flyTo(spot.center, 14);
+        if (spot) {
+          MapManager.flyTo(spot.center, 14);
+          UIController.showSpotDetail(spot);
+        }
       });
     });
   },
@@ -653,10 +695,52 @@ const UIController = {
   },
 
   showSpotDetail(spot) {
-    let html = `<h2>${spot.name}</h2>`;
+    let html = '';
+
+    // Image or placeholder at the top
+    if (spot.image) {
+      html += `<div class="spot-image" onclick="window.open('${spot.image}', '_blank')">
+        <img src="${spot.image}" alt="${spot.name}" loading="lazy"
+             onerror="this.parentElement.style.display='none'">
+      </div>`;
+    } else if (spot.images && spot.images.length > 1) {
+      html += `<div class="spot-gallery">`;
+      spot.images.forEach(src => {
+        html += `<img src="${src}" alt="${spot.name}" loading="lazy"
+                      onclick="window.open('${src}', '_blank')"
+                      onerror="this.style.display='none'">`;
+      });
+      html += `</div>`;
+    } else if (spot.images && spot.images.length === 1) {
+      html += `<div class="spot-image" onclick="window.open('${spot.images[0]}', '_blank')">
+        <img src="${spot.images[0]}" alt="${spot.name}" loading="lazy"
+             onerror="this.parentElement.style.display='none'">
+      </div>`;
+    } else {
+      // Placeholder: colored div with name and icon
+      const bgColors = {
+        '自然风光': '#27ae60', '历史古迹': '#8e44ad', '文化遗产': '#8e44ad',
+        '现代建筑': '#2980b9', '主题乐园': '#e67e22', '博物馆': '#16a085',
+        '宗教圣地': '#d35400', '海滨度假': '#3498db', '古镇': '#7f8c8d',
+      };
+      const bg = bgColors[spot.category] || '#4a90d9';
+      const icons = {
+        '自然风光': '🏞️', '历史古迹': '🏛️', '文化遗产': '🏛️',
+        '现代建筑': '🏙️', '主题乐园': '🎢', '博物馆': '🏛️',
+        '宗教圣地': '🛕', '海滨度假': '🏖️', '古镇': '🏘️',
+      };
+      const icon = icons[spot.category] || '📍';
+      html += `<div class="spot-placeholder" style="background:${bg}">
+        <span class="placeholder-icon">${icon}</span>
+        <span class="placeholder-name">${spot.name}</span>
+      </div>`;
+    }
+
+    html += `<h2>${spot.name}</h2>`;
     html += `<div class="city-meta">${spot.city} · ${spot.category || '景点'}</div>`;
+
     if (spot.description) {
-      html += `<div class="section"><p style="font-size:14px;color:var(--text-dark);line-height:1.6">${spot.description}</p></div>`;
+      html += `<div class="section"><p class="spot-description">${spot.description}</p></div>`;
     }
 
     this.elements.detailContent.innerHTML = html;

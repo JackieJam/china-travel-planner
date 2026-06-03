@@ -44,6 +44,6 @@
 ## 本地运行
 
 ```bash
-python3 -m http.server 8080
-# 访问 http://localhost:8080
+python3 -m http.server 8765
+# 访问 http://localhost:8765
 ```
