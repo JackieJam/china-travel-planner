@@ -16,12 +16,14 @@ const MapManager = {
   init(container) {
     this.map = new AMap.Map(container, {
       zoom: 4.5,
-      center: [104.5, 35.5],
+      center: [105, 35],
       viewMode: '2D',
       mapStyle: 'amap://styles/normal',
       resizeEnable: true,
       zooms: [3, 18],
     });
+
+    this.map.setLimitBounds(new AMap.Bounds([73, 17], [136, 54]));
 
     this.map.on('zoomchange', () => {
       this.currentZoom = this.map.getZoom();
@@ -35,6 +37,8 @@ const MapManager = {
         UIController.hideDetail();
       }
     });
+
+    this.loadProvinceBorders();
   },
 
   flyTo(center, zoom) {
@@ -47,6 +51,8 @@ const MapManager = {
 
   // 纯净模式：隐藏底图杂项，只保留省界/水系/自定义覆盖物
   _cleanMode: false,
+  _provinceBorders: [],
+  _provinceLabels: [],
 
   toggleCleanMode() {
     if (this._cleanMode) {
@@ -58,7 +64,94 @@ const MapManager = {
       this.map.setFeatures(['bg']);
       this._cleanMode = true;
     }
+
+    // Show/hide station labels
+    LayerManager.setStationLabelsVisible(this._cleanMode);
+
+    // Show/hide province borders
+    this._provinceBorders.forEach(o => {
+      if (this._cleanMode) o.show(); else o.hide();
+    });
+    this._provinceLabels.forEach(o => {
+      if (this._cleanMode) o.show(); else o.hide();
+    });
+
     return this._cleanMode;
+  },
+
+  async loadProvinceBorders() {
+    try {
+      const resp = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+      if (!resp.ok) return;
+      const geojson = await resp.json();
+
+      this._provinceBorders = [];
+      this._provinceLabels = [];
+
+      const features = geojson.features || [];
+      for (const feature of features) {
+        const name = feature.properties.name;
+        const center = feature.properties.center || feature.properties.centroid;
+        const geometry = feature.geometry;
+
+        // Draw province boundaries as polylines
+        if (geometry.type === 'Polygon') {
+          this._drawPolygon(geometry.coordinates, name, center);
+        } else if (geometry.type === 'MultiPolygon') {
+          for (const polygon of geometry.coordinates) {
+            this._drawPolygon(polygon, name, center);
+          }
+        }
+      }
+
+      // Initially hidden
+      this._provinceBorders.forEach(o => o.hide());
+      this._provinceLabels.forEach(o => o.hide());
+    } catch (e) {
+      console.warn('省界数据加载失败:', e);
+    }
+  },
+
+  _drawPolygon(coordinates, name, center) {
+    const map = this.map;
+
+    // coordinates is array of rings, first ring is outer boundary
+    for (const ring of coordinates) {
+      const path = ring.map(coord => new AMap.LngLat(coord[0], coord[1]));
+      if (path.length < 3) continue;
+
+      const polygon = new AMap.Polygon({
+        path: path,
+        strokeColor: '#999',
+        strokeWeight: 1.5,
+        strokeOpacity: 0.7,
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        zIndex: 5,
+      });
+
+      map.add(polygon);
+      this._provinceBorders.push(polygon);
+    }
+
+    // Province name label
+    if (center) {
+      const label = new AMap.Text({
+        text: name,
+        position: [center[0], center[1]],
+        style: {
+          'font-size': '12px',
+          'color': '#666',
+          'background-color': 'transparent',
+          'border': 'none',
+          'padding': '0',
+          'font-weight': '400',
+        },
+        zIndex: 4,
+      });
+      map.add(label);
+      this._provinceLabels.push(label);
+    }
   },
 };
 
@@ -138,6 +231,7 @@ const LayerManager = {
     metroStations: [],
     spotMarkers: [],
     cityMarkers: [],
+    stationLabels: [],
   },
 
   init() {
@@ -180,6 +274,12 @@ const LayerManager = {
     this._clearOverlays(this.overlays.metroLines);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
+    // Remove metro-contributed station labels
+    if (this._metroLabelStart !== undefined) {
+      const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
+      removed.forEach(o => MapManager.map.remove(o));
+      this._metroLabelStart = undefined;
+    }
 
     // 飞入城市
     MapManager.flyTo(city.center, city.zoom || 11);
@@ -200,7 +300,13 @@ const LayerManager = {
     this._clearOverlays(this.overlays.metroLines);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
-    MapManager.flyTo([104.5, 35.5], 4.5);
+    // Remove metro-contributed station labels
+    if (this._metroLabelStart !== undefined) {
+      const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
+      removed.forEach(o => MapManager.map.remove(o));
+      this._metroLabelStart = undefined;
+    }
+    MapManager.flyTo([105, 35], 4.5);
     UIController.hideDetail();
     UIController.highlightCity(null);
   },
@@ -243,6 +349,7 @@ const LayerManager = {
   // ---- HSR Layer ----
   _renderHSRLayer() {
     const map = MapManager.map;
+    const labeledStations = new Set();
 
     DataManager.hsr.forEach(line => {
       // 提取站点坐标组成线路路径
@@ -286,6 +393,30 @@ const LayerManager = {
 
         map.add(marker);
         this.overlays.hsrStations.push(marker);
+
+        // 站点名称标注（去重：同一坐标只标注一次）
+        const stationKey = station.center.join(',');
+        if (!labeledStations.has(stationKey)) {
+          labeledStations.add(stationKey);
+          const label = new AMap.Text({
+            text: station.name,
+            position: station.center,
+            offset: new AMap.Pixel(6, -6),
+            style: {
+              'font-size': '11px',
+              'color': '#333',
+              'background-color': 'rgba(255,255,255,0.85)',
+              'border': 'none',
+              'padding': '1px 4px',
+              'border-radius': '2px',
+              'font-weight': '500',
+            },
+            zIndex: 65,
+            visible: false,
+          });
+          map.add(label);
+          this.overlays.stationLabels.push(label);
+        }
       });
 
       // 线路名称标注（取中间站点位置）
@@ -316,11 +447,18 @@ const LayerManager = {
   _renderMetroLayer(cityName) {
     this._clearOverlays(this.overlays.metroLines);
     this._clearOverlays(this.overlays.metroStations);
+    // Remove metro-contributed station labels
+    if (this._metroLabelStart !== undefined) {
+      const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
+      removed.forEach(o => MapManager.map.remove(o));
+    }
+    this._metroLabelStart = this.overlays.stationLabels.length;
 
     const metroData = DataManager.getCityMetro(cityName);
     if (!metroData) return;
 
     const map = MapManager.map;
+    const labeledMetroStations = new Set();
 
     metroData.lines.forEach(line => {
       const path = line.stations.map(s => s.center);
@@ -363,6 +501,30 @@ const LayerManager = {
 
         map.add(marker);
         this.overlays.metroStations.push(marker);
+
+        // 地铁站名称标注（去重）
+        const stationKey = station.center.join(',');
+        if (!labeledMetroStations.has(stationKey)) {
+          labeledMetroStations.add(stationKey);
+          const label = new AMap.Text({
+            text: station.name,
+            position: station.center,
+            offset: new AMap.Pixel(6, -6),
+            style: {
+              'font-size': '10px',
+              'color': '#333',
+              'background-color': 'rgba(255,255,255,0.85)',
+              'border': 'none',
+              'padding': '1px 4px',
+              'border-radius': '2px',
+              'font-weight': '500',
+            },
+            zIndex: 86,
+            visible: MapManager._cleanMode,
+          });
+          map.add(label);
+          this.overlays.stationLabels.push(label);
+        }
       });
     });
   },
@@ -417,6 +579,12 @@ const LayerManager = {
   _clearOverlays(arr) {
     arr.forEach(o => MapManager.map.remove(o));
     arr.length = 0;
+  },
+
+  setStationLabelsVisible(visible) {
+    this.overlays.stationLabels.forEach(label => {
+      if (visible) label.show(); else label.hide();
+    });
   },
 };
 
