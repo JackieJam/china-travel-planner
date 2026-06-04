@@ -164,6 +164,7 @@ const DataManager = {
   trains: [],
 
   async loadAll() {
+    const overlay = document.getElementById('loading-overlay');
     UIController.setStatus('加载数据中…');
     try {
       const [cities, hsr, metro, spots] = await Promise.all([
@@ -177,21 +178,29 @@ const DataManager = {
       this.metro = metro;
       this.spots = spots;
 
-      // Load trains data separately (graceful fallback if not available yet)
-      try {
-        const trains = await this._fetch('data/trains.json');
-        this.trains = trains;
-      } catch (trainErr) {
-        console.warn('车次数据加载失败（可忽略）:', trainErr);
-        this.trains = [];
-      }
+      if (overlay) overlay.style.display = 'none';
 
-      const trainCount = this.trains.length;
-      const trainInfo = trainCount > 0 ? `, ${trainCount} 车次` : '';
-      UIController.setStatus(`已加载 ${cities.length} 城市, ${hsr.length} 高铁线, ${metro.length} 城市地铁, ${spots.length} 景点${trainInfo}`);
+      UIController.setStatus(`已加载 ${cities.length} 城市, ${hsr.length} 高铁线, ${metro.length} 城市地铁, ${spots.length} 景点`);
+
+      // 车次数据懒加载：首次访问站点时按需拉取
+      this._trainsLoaded = false;
     } catch (err) {
       console.error('数据加载失败:', err);
       UIController.setStatus('数据加载失败，请检查 JSON 文件');
+      if (overlay) overlay.style.display = 'none';
+    }
+  },
+
+  async loadTrains() {
+    if (this._trainsLoaded) return;
+    this._trainsLoaded = true;
+    UIController.setStatus('加载车次数据…');
+    try {
+      this.trains = await this._fetch('data/trains.json');
+      UIController.setStatus(`车次加载完成: ${this.trains.length} 条`);
+    } catch (e) {
+      console.warn('车次数据加载失败（可忽略）:', e);
+      this.trains = [];
     }
   },
 
@@ -603,12 +612,17 @@ const LayerManager = {
 
         marker._stationImportance = this._getStationImportance(station.name);
 
-        marker.on('click', (e) => {
+        marker.on('click', async (e) => {
           // 查找该站点属于哪些线路
           const lines = DataManager.hsr.filter(l =>
             l.stations.some(s => s.name === station.name)
           );
           UIController.showStationDetail(station, lines);
+          // 懒加载车次数据
+          if (!DataManager._trainsLoaded) {
+            await DataManager.loadTrains();
+            UIController.showStationDetail(station, lines);
+          }
         });
 
         map.add(marker);
@@ -956,6 +970,20 @@ const UIController = {
       if (e.key === 'Escape') this.hideDetail();
     });
 
+    // 移动端侧边栏切换
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar && sidebarToggle) {
+      const toggleSidebar = () => {
+        sidebar.classList.toggle('collapsed');
+      };
+      sidebarToggle.addEventListener('click', toggleSidebar);
+      if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', toggleSidebar);
+      // 移动端默认收起
+      if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
+    }
+
     // 纯净模式切换
     this.elements.mapModeToggle.addEventListener('click', () => {
       const isClean = MapManager.toggleCleanMode();
@@ -1093,9 +1121,8 @@ const UIController = {
     // 景点信息 (with thumbnails)
     if (spots.length) {
       const bgColors = {
-        '自然风光': '#27ae60', '历史古迹': '#8e44ad', '文化遗产': '#8e44ad',
-        '现代建筑': '#2980b9', '主题乐园': '#e67e22', '博物馆': '#16a085',
-        '宗教圣地': '#d35400', '海滨度假': '#3498db', '古镇': '#7f8c8d',
+        '自然': '#27ae60', '历史': '#8e44ad', '文化': '#d35400',
+        '现代': '#2980b9',
       };
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--spots-color)"></span>著名景点 (${spots.length}个)</h3>`;
@@ -1338,15 +1365,13 @@ const UIController = {
     } else {
       // Placeholder: colored div with name and icon
       const bgColors = {
-        '自然风光': '#27ae60', '历史古迹': '#8e44ad', '文化遗产': '#8e44ad',
-        '现代建筑': '#2980b9', '主题乐园': '#e67e22', '博物馆': '#16a085',
-        '宗教圣地': '#d35400', '海滨度假': '#3498db', '古镇': '#7f8c8d',
+        '自然': '#27ae60', '历史': '#8e44ad', '文化': '#d35400',
+        '现代': '#2980b9',
       };
       const bg = bgColors[spot.category] || '#4a90d9';
       const icons = {
-        '自然风光': '🏞️', '历史古迹': '🏛️', '文化遗产': '🏛️',
-        '现代建筑': '🏙️', '主题乐园': '🎢', '博物馆': '🏛️',
-        '宗教圣地': '🛕', '海滨度假': '🏖️', '古镇': '🏘️',
+        '自然': '🏞️', '历史': '🏛️', '文化': '🎭',
+        '现代': '🏙️',
       };
       const icon = icons[spot.category] || '📍';
       html += `<div class="spot-placeholder" style="background:${bg}">
