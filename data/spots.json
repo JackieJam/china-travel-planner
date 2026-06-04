@@ -61725,5 +61725,797 @@
     ],
     "category": "自然",
     "description": "评分 2.6"
+  },
+  {
+    "name": "南锣鼓巷",
+    "city": "北京",
+    "center": [
+      116.403,
+      39.937
+    ],
+    "category": "文化",
+    "description": "北京最古老的街区之一，胡同文化代表，汇集各类小店和美食。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "什刹海",
+    "city": "北京",
+    "center": [
+      116.388,
+      39.942
+    ],
+    "category": "自然",
+    "description": "由前海、后海、西海三片水面组成的历史文化旅游风景区。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "雍和宫",
+    "city": "北京",
+    "center": [
+      116.417,
+      39.947
+    ],
+    "category": "文化",
+    "description": "北京市内最大的藏传佛教寺院，原为雍正帝府邸。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "鸟巢·水立方",
+    "city": "北京",
+    "center": [
+      116.396,
+      39.993
+    ],
+    "category": "现代",
+    "description": "2008年北京奥运会主体育场和国家游泳中心，地标性建筑。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "中国国家博物馆",
+    "city": "北京",
+    "center": [
+      116.404,
+      39.905
+    ],
+    "category": "文化",
+    "description": "世界上建筑面积最大的博物馆之一，藏品超140万件。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "798艺术区",
+    "city": "北京",
+    "center": [
+      116.495,
+      39.984
+    ],
+    "category": "现代",
+    "description": "由废弃工厂改造而成的当代艺术聚集地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "慕田峪长城",
+    "city": "北京",
+    "center": [
+      116.57,
+      40.432
+    ],
+    "category": "历史",
+    "description": "万里长城精华段，植被覆盖率高，景色壮丽。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "香山公园",
+    "city": "北京",
+    "center": [
+      116.187,
+      39.992
+    ],
+    "category": "自然",
+    "description": "以红叶闻名的皇家园林，秋季赏红叶胜地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "景山公园",
+    "city": "北京",
+    "center": [
+      116.397,
+      39.925
+    ],
+    "category": "自然",
+    "description": "可俯瞰故宫全景的最佳观景点。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "恭王府",
+    "city": "北京",
+    "center": [
+      116.386,
+      39.934
+    ],
+    "category": "历史",
+    "description": "清代规模最大王府花园，和珅旧宅。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "前门大街",
+    "city": "北京",
+    "center": [
+      116.398,
+      39.899
+    ],
+    "category": "文化",
+    "description": "北京著名商业老街，保留大量民国建筑。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "国家大剧院",
+    "city": "北京",
+    "center": [
+      116.383,
+      39.904
+    ],
+    "category": "现代",
+    "description": "外形如水上明珠的现代建筑，世界级表演场所。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "王府井步行街",
+    "city": "北京",
+    "center": [
+      116.41,
+      39.914
+    ],
+    "category": "现代",
+    "description": "北京最著名的商业街，有中华老字号聚集地之称。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "南京路步行街",
+    "city": "上海",
+    "center": [
+      121.475,
+      31.236
+    ],
+    "category": "现代",
+    "description": "中华商业第一街，上海最繁华的购物街区。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "新天地",
+    "city": "上海",
+    "center": [
+      121.474,
+      31.22
+    ],
+    "category": "现代",
+    "description": "石库门里弄改造的时尚休闲区，中西文化交融。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "上海博物馆",
+    "city": "上海",
+    "center": [
+      121.474,
+      31.229
+    ],
+    "category": "文化",
+    "description": "中国四大博物馆之一，馆藏文物近百万件。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "田子坊",
+    "city": "上海",
+    "center": [
+      121.468,
+      31.211
+    ],
+    "category": "文化",
+    "description": "由老弄堂改造的创意产业园区，文艺小店聚集。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "陆家嘴",
+    "city": "上海",
+    "center": [
+      121.506,
+      31.237
+    ],
+    "category": "现代",
+    "description": "中国最具影响力的金融中心，上海中心大厦等超高层地标所在。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "上海迪士尼乐园",
+    "city": "上海",
+    "center": [
+      121.673,
+      31.144
+    ],
+    "category": "现代",
+    "description": "中国大陆首座迪士尼主题乐园。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "西安城墙",
+    "city": "西安",
+    "center": [
+      108.94,
+      34.26
+    ],
+    "category": "历史",
+    "description": "中国现存规模最大、保存最完整的古城墙。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "钟鼓楼",
+    "city": "西安",
+    "center": [
+      108.943,
+      34.261
+    ],
+    "category": "历史",
+    "description": "西安市中心地标，明代建筑，晨钟暮鼓。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "陕西历史博物馆",
+    "city": "西安",
+    "center": [
+      108.952,
+      34.226
+    ],
+    "category": "文化",
+    "description": "中国第一座大型现代化博物馆，馆藏文物37万余件。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "大明宫国家遗址公园",
+    "city": "西安",
+    "center": [
+      108.96,
+      34.3
+    ],
+    "category": "历史",
+    "description": "唐代皇宫遗址，面积是故宫的4.5倍。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "碑林博物馆",
+    "city": "西安",
+    "center": [
+      108.941,
+      34.253
+    ],
+    "category": "文化",
+    "description": "收藏中国古代碑石时间最早、数目最大的艺术宝库。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "永兴坊",
+    "city": "西安",
+    "center": [
+      108.96,
+      34.27
+    ],
+    "category": "文化",
+    "description": "非遗美食文化街区，汇集陕西各地市特色美食。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "大熊猫繁育研究基地",
+    "city": "成都",
+    "center": [
+      104.145,
+      30.734
+    ],
+    "category": "自然",
+    "description": "全球最大的大熊猫人工繁育基地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "都江堰",
+    "city": "成都",
+    "center": [
+      103.647,
+      31.005
+    ],
+    "category": "历史",
+    "description": "世界文化遗产，公元前256年建造的无坝引水工程。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "青城山",
+    "city": "成都",
+    "center": [
+      103.573,
+      30.9
+    ],
+    "category": "自然",
+    "description": "中国道教发源地之一，世界文化遗产，林木葱翠。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "春熙路",
+    "city": "成都",
+    "center": [
+      104.08,
+      30.657
+    ],
+    "category": "现代",
+    "description": "成都最繁华的商业中心，中西部最大的商业街区。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "人民公园",
+    "city": "成都",
+    "center": [
+      104.057,
+      30.66
+    ],
+    "category": "文化",
+    "description": "成都最具生活气息的公园，鹤鸣茶社喝盖碗茶。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "越秀公园",
+    "city": "广州",
+    "center": [
+      113.271,
+      23.142
+    ],
+    "category": "自然",
+    "description": "广州最大公园，五羊雕像所在地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "北京路步行街",
+    "city": "广州",
+    "center": [
+      113.264,
+      23.123
+    ],
+    "category": "现代",
+    "description": "广州最繁华的商业街，地下有千年古道遗址。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "长隆旅游度假区",
+    "city": "广州",
+    "center": [
+      113.33,
+      22.996
+    ],
+    "category": "现代",
+    "description": "集主题公园、水上乐园、野生动物世界于一体的旅游胜地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "中山纪念堂",
+    "city": "广州",
+    "center": [
+      113.267,
+      23.133
+    ],
+    "category": "历史",
+    "description": "纪念孙中山先生的标志性建筑，八角形宫殿式建筑。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "广东省博物馆",
+    "city": "广州",
+    "center": [
+      113.323,
+      23.116
+    ],
+    "category": "文化",
+    "description": "外形如宝盒的现代化博物馆，馆藏丰富。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "湖北省博物馆",
+    "city": "武汉",
+    "center": [
+      114.366,
+      30.561
+    ],
+    "category": "文化",
+    "description": "藏有越王勾践剑、曾侯乙编钟等国宝级文物。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "江汉路步行街",
+    "city": "武汉",
+    "center": [
+      114.289,
+      30.577
+    ],
+    "category": "现代",
+    "description": "中国最长的步行街，近代建筑群保存完好。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "晴川阁",
+    "city": "武汉",
+    "center": [
+      114.278,
+      30.557
+    ],
+    "category": "历史",
+    "description": "与黄鹤楼隔江相望，晴川历历汉阳树。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "楚河汉街",
+    "city": "武汉",
+    "center": [
+      114.342,
+      30.555
+    ],
+    "category": "现代",
+    "description": "世界级城市商业文化旅游步行街。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "古琴台",
+    "city": "武汉",
+    "center": [
+      114.272,
+      30.557
+    ],
+    "category": "历史",
+    "description": "伯牙鼓琴遇知音的典故发源地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "雷峰塔",
+    "city": "杭州",
+    "center": [
+      120.149,
+      30.232
+    ],
+    "category": "历史",
+    "description": "白蛇传传说发源地，西湖南岸标志性建筑。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "西溪湿地",
+    "city": "杭州",
+    "center": [
+      120.06,
+      30.267
+    ],
+    "category": "自然",
+    "description": "国家湿地公园，城市中的天然湿地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "宋城",
+    "city": "杭州",
+    "center": [
+      120.122,
+      30.187
+    ],
+    "category": "文化",
+    "description": "大型宋文化主题公园，宋城千古情演出驰名全国。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "良渚古城遗址",
+    "city": "杭州",
+    "center": [
+      120.0,
+      30.405
+    ],
+    "category": "历史",
+    "description": "世界文化遗产，中华五千年文明史的实证。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "断桥残雪",
+    "city": "杭州",
+    "center": [
+      120.155,
+      30.26
+    ],
+    "category": "自然",
+    "description": "西湖十景之一，白娘子与许仙相会之处。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "总统府",
+    "city": "南京",
+    "center": [
+      118.787,
+      32.045
+    ],
+    "category": "历史",
+    "description": "中国近代史博物馆，见证太平天国到民国历史。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "南京博物院",
+    "city": "南京",
+    "center": [
+      118.812,
+      32.045
+    ],
+    "category": "文化",
+    "description": "中国三大博物馆之一，前身是国立中央博物院。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "鸡鸣寺",
+    "city": "南京",
+    "center": [
+      118.794,
+      32.062
+    ],
+    "category": "历史",
+    "description": "南京最古老的梵刹之一，樱花季尤为出名。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "秦淮河",
+    "city": "南京",
+    "center": [
+      118.788,
+      32.025
+    ],
+    "category": "文化",
+    "description": "南京母亲河，十里秦淮风光带夜景璀璨。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "雨花台",
+    "city": "南京",
+    "center": [
+      118.773,
+      31.989
+    ],
+    "category": "历史",
+    "description": "革命烈士陵园和风景名胜区，雨花石产地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "磁器口古镇",
+    "city": "重庆",
+    "center": [
+      106.448,
+      29.58
+    ],
+    "category": "历史",
+    "description": "千年古镇，巴渝文化缩影，小重庆之称。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "长江索道",
+    "city": "重庆",
+    "center": [
+      106.585,
+      29.556
+    ],
+    "category": "现代",
+    "description": "横跨长江的空中索道，体验山城立体交通的独特方式。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "大足石刻",
+    "city": "重庆",
+    "center": [
+      105.7,
+      29.7
+    ],
+    "category": "历史",
+    "description": "世界文化遗产，唐宋石刻艺术的代表。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "武隆天生三桥",
+    "city": "重庆",
+    "center": [
+      107.75,
+      29.35
+    ],
+    "category": "自然",
+    "description": "世界自然遗产，三座天然石拱桥组成的喀斯特地貌奇观。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "鹅岭公园",
+    "city": "重庆",
+    "center": [
+      106.539,
+      29.56
+    ],
+    "category": "自然",
+    "description": "可360度俯瞰重庆两江风光的城市制高点。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "三峡博物馆",
+    "city": "重庆",
+    "center": [
+      106.543,
+      29.56
+    ],
+    "category": "文化",
+    "description": "展示三峡文化和重庆历史的综合性博物馆。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "朝天门",
+    "city": "重庆",
+    "center": [
+      106.587,
+      29.567
+    ],
+    "category": "历史",
+    "description": "嘉陵江与长江交汇处，重庆古城门之一。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "深圳湾公园",
+    "city": "深圳",
+    "center": [
+      113.99,
+      22.503
+    ],
+    "category": "自然",
+    "description": "沿海休闲带，观鸟胜地，可远眺香港。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "莲花山公园",
+    "city": "深圳",
+    "center": [
+      114.059,
+      22.555
+    ],
+    "category": "自然",
+    "description": "深圳市中心最大公园，山顶广场可俯瞰深圳全景。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "仙湖植物园",
+    "city": "深圳",
+    "center": [
+      114.177,
+      22.57
+    ],
+    "category": "自然",
+    "description": "集植物收集、研究与观赏为一体的植物园，弘法寺所在。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "华侨城创意文化园",
+    "city": "深圳",
+    "center": [
+      113.986,
+      22.54
+    ],
+    "category": "现代",
+    "description": "由旧工业区改造的创意园区，深圳798。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "大鹏古城",
+    "city": "深圳",
+    "center": [
+      114.497,
+      22.59
+    ],
+    "category": "历史",
+    "description": "深圳唯一的国家级重点文物保护单位，明清海防要塞。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "锦绣中华",
+    "city": "深圳",
+    "center": [
+      113.984,
+      22.534
+    ],
+    "category": "文化",
+    "description": "中国第一个荟萃各民族民艺、民俗的主题公园。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "太平街",
+    "city": "长沙",
+    "center": [
+      112.975,
+      28.197
+    ],
+    "category": "文化",
+    "description": "长沙保留最完整的古街，贾谊故居所在地。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "沈阳故宫",
+    "city": "沈阳",
+    "center": [
+      123.45,
+      41.796
+    ],
+    "category": "历史",
+    "description": "中国仅存的两大宫殿建筑群之一，清太祖努尔哈赤皇宫。",
+    "image": null,
+    "images": []
+  },
+  {
+    "name": "张氏帅府",
+    "city": "沈阳",
+    "center": [
+      123.454,
+      41.793
+    ],
+    "category": "历史",
+    "description": "张学良旧居，东北近代史缩影。",
+    "image": null,
+    "images": []
   }
 ]

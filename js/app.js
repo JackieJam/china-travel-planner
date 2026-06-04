@@ -11,19 +11,17 @@
 // ==================== Map Manager ====================
 const MapManager = {
   map: null,
-  currentZoom: 5,
+  currentZoom: 4.5,
 
   init(container) {
     this.map = new AMap.Map(container, {
       zoom: 4.5,
-      center: [105, 35],
+      center: [108, 36],
       viewMode: '2D',
       mapStyle: 'amap://styles/normal',
       resizeEnable: true,
       zooms: [3, 18],
     });
-
-    this.map.setLimitBounds(new AMap.Bounds([73, 17], [136, 54]));
 
     this.map.on('zoomchange', () => {
       this.currentZoom = this.map.getZoom();
@@ -370,8 +368,18 @@ const LayerManager = {
       if (show && this.selectedCity) {
         this._renderMetroLayer(this.selectedCity);
       }
-      this._setOverlaysVisible(this.overlays.metroLines, show);
-      this._setOverlaysVisible(this.overlays.metroStations, show);
+      // 用渐进式显示代替全量显示/隐藏
+      if (show) {
+        this._applyMetroZoomVisibility(MapManager.currentZoom);
+      } else {
+        // 关闭地铁图层：用 setMap(null) 确保隐藏
+        const map = MapManager.map;
+        this.overlays.metroLines.forEach(o => o.setMap(null));
+        this.overlays.metroStations.forEach(o => o.setMap(null));
+        this.overlays.stationLabels.forEach(o => {
+          if (o._metroStationImportance !== undefined) o.setMap(null);
+        });
+      }
     } else if (layerName === 'spots') {
       if (show && this.selectedCity) {
         this._renderSpotsLayer(this.selectedCity);
@@ -382,18 +390,20 @@ const LayerManager = {
 
   onZoomChange(zoom) {
     // 缩放级别变化时可以调整标注可见性
-    const showHSRLabels = zoom >= 5;
+    // 线路名称标注：zoom >= 6 时显示（zoom 5 只看主干线，不需要名字）
+    const showHSRLabels = zoom >= 6;
     this._setOverlaysVisible(this.overlays.hsrLabels, showHSRLabels && this.visible.hsr);
 
-    // Control line visibility by zoom level and importance
+    // 高铁线路渐进显示（zoom 越大显示越多）
+    // importance: 1=主干线(京沪/京广等), 2=G型高铁, 3=D/C型动车城际, 4=K型及其他
     this.overlays.hsrLines.forEach(line => {
       const data = line.getExtData();
       const importance = data ? data.importance : 1;
       let show = false;
-      if (zoom >= 8) show = true;
-      else if (zoom >= 6 && importance <= 3) show = true;
-      else if (zoom >= 5 && importance <= 2) show = true;
-      else if (importance <= 1) show = true;
+      if (zoom >= 8) show = true;                      // 全部线路
+      else if (zoom >= 7 && importance <= 3) show = true; // + 动车/城际
+      else if (zoom >= 6 && importance <= 2) show = true; // + G型高铁
+      else if (zoom >= 5 && importance <= 1) show = true; // 仅主干线
 
       // Also check line type filter state
       const lineType = data ? data.lineType : 'G';
@@ -404,27 +414,32 @@ const LayerManager = {
       }
     });
 
-    // Control station marker visibility by zoom and importance
+    // 高铁站点渐进显示
+    // importance: 1=大型枢纽, 2=区域枢纽, 3=普通站
     this.overlays.hsrStations.forEach(marker => {
       const importance = marker._stationImportance || 3;
       let show = false;
-      if (zoom >= 10) show = true;
-      else if (zoom >= 7 && importance <= 2) show = true;
-      else if (zoom >= 5 && importance <= 1) show = true;
+      if (zoom >= 10) show = true;                    // 全部站点
+      else if (zoom >= 8 && importance <= 2) show = true; // + 区域枢纽
+      else if (zoom >= 6 && importance <= 1) show = true; // 仅大型枢纽
 
       if (show && this.visible.hsr) marker.show(); else marker.hide();
     });
 
-    // Control station labels by zoom and importance
+    // 站点名称标注（HSR 标签，跳过地铁标签——地铁由 _applyMetroZoomVisibility 处理）
     this.overlays.stationLabels.forEach(label => {
+      if (label._metroStationImportance !== undefined) return; // 地铁标签，跳过
       const importance = label._stationImportance || 3;
       let show = false;
       if (zoom >= 10) show = true;
-      else if (zoom >= 7 && importance <= 2) show = true;
-      else if (zoom >= 5 && importance <= 1) show = true;
+      else if (zoom >= 8 && importance <= 2) show = true;
+      else if (zoom >= 6 && importance <= 1) show = true;
 
       if (show && MapManager._cleanMode && this.visible.hsr) label.show(); else label.hide();
     });
+
+    // 地铁渐进式披露
+    this._applyMetroZoomVisibility(zoom);
   },
 
   // Line type filter state (all visible by default)
@@ -446,12 +461,12 @@ const LayerManager = {
       const lineType = data ? data.lineType : 'G';
       const importance = data ? data.importance : 1;
 
-      // Check zoom-based visibility
+      // Check zoom-based visibility (same thresholds as onZoomChange)
       let showByZoom = false;
       if (zoom >= 8) showByZoom = true;
-      else if (zoom >= 6 && importance <= 3) showByZoom = true;
-      else if (zoom >= 5 && importance <= 2) showByZoom = true;
-      else if (importance <= 1) showByZoom = true;
+      else if (zoom >= 7 && importance <= 3) showByZoom = true;
+      else if (zoom >= 6 && importance <= 2) showByZoom = true;
+      else if (zoom >= 5 && importance <= 1) showByZoom = true;
 
       // Check filter visibility
       const showByFilter = this._lineFilterVisible(lineType);
@@ -480,8 +495,8 @@ const LayerManager = {
       this._metroLabelStart = undefined;
     }
 
-    // 飞入城市
-    MapManager.flyTo(city.center, city.zoom || 11);
+    // 居中到城市（保持当前缩放级别不变，由用户自行缩放）
+    MapManager.map.panTo(city.center);
 
     // 渲染地铁和景点（如果图层开启）
     if (this.visible.metro) this._renderMetroLayer(cityName);
@@ -505,7 +520,7 @@ const LayerManager = {
       removed.forEach(o => MapManager.map.remove(o));
       this._metroLabelStart = undefined;
     }
-    MapManager.flyTo([105, 35], 4.5);
+    MapManager.flyTo([108, 36], 4.5);
     UIController.hideDetail();
     UIController.highlightCity(null);
   },
@@ -694,10 +709,38 @@ const LayerManager = {
 
     const map = MapManager.map;
     const labeledMetroStations = new Set();
+    const zoom = MapManager.currentZoom;
+
+    // 预计算换乘站：出现在多条线路上的站点
+    const stationLineCount = {};
+    metroData.lines.forEach(line => {
+      line.stations.forEach(s => {
+        stationLineCount[s.name] = (stationLineCount[s.name] || 0) + 1;
+      });
+    });
+    const isTransfer = (name) => (stationLineCount[name] || 0) >= 2;
+
+    // 地铁线路重要性：1=主干线(1-5号), 2=辅助线(6-10号), 3=支线/快线
+    const getMetroLineImportance = (lineName) => {
+      const m = lineName.match(/(\d+)/);
+      const num = m ? parseInt(m[1]) : 99;
+      if (lineName.includes('支线') || lineName.includes('支')) return 3;
+      if (num <= 5) return 1;
+      if (num <= 10) return 2;
+      return 3;
+    };
+
+    // 地铁站重要性：1=换乘站, 3=普通站
+    const getMetroStationImportance = (stationName) => {
+      if (isTransfer(stationName)) return 1;
+      return 3;
+    };
 
     metroData.lines.forEach(line => {
       const path = line.stations.map(s => s.center);
       if (path.length < 2) return;
+
+      const lineImportance = getMetroLineImportance(line.name);
 
       const polyline = new AMap.Polyline({
         path: path,
@@ -710,6 +753,9 @@ const LayerManager = {
         extData: line,
       });
 
+      // 存储地铁线路重要性，供 onZoomChange 使用
+      polyline._metroLineImportance = lineImportance;
+
       polyline.on('click', () => {
         UIController.showMetroLineDetail(line, cityName);
       });
@@ -719,17 +765,26 @@ const LayerManager = {
 
       // 地铁站标记
       line.stations.forEach(station => {
+        const metroImportance = getMetroStationImportance(station.name);
+        const isTransferStation = isTransfer(station.name);
+
+        // 换乘站用更大的标记
+        const markerContent = isTransferStation
+          ? `<div style="width:8px;height:8px;background:#fff;border:2px solid #333;border-radius:50%;cursor:pointer;" title="${station.name}"></div>`
+          : `<div style="width:6px;height:6px;background:#fff;border:2px solid ${line.color};border-radius:50%;cursor:pointer;" title="${station.name}"></div>`;
+
         const marker = new AMap.Marker({
           position: station.center,
-          content: `<div style="width:6px;height:6px;background:#fff;border:2px solid ${line.color};border-radius:50%;cursor:pointer;" title="${station.name}"></div>`,
-          offset: new AMap.Pixel(-4, -4),
+          content: markerContent,
+          offset: new AMap.Pixel(isTransferStation ? -5 : -4, isTransferStation ? -5 : -4),
           zIndex: 85,
         });
 
+        // 地铁专用重要性（区别于 HSR 的 _stationImportance）
+        marker._metroStationImportance = metroImportance;
         marker._stationImportance = this._getStationImportance(station.name);
 
         marker.on('click', () => {
-          // 查找该站属于哪些地铁线
           const transferLines = metroData.lines.filter(l =>
             l.stations.some(s => s.name === station.name)
           );
@@ -754,16 +809,56 @@ const LayerManager = {
               'border': 'none',
               'padding': '1px 4px',
               'border-radius': '2px',
-              'font-weight': '500',
+              'font-weight': isTransferStation ? '600' : '500',
             },
             zIndex: 86,
             visible: MapManager._cleanMode,
           });
+          label._metroStationImportance = metroImportance;
           label._stationImportance = this._getStationImportance(station.name);
           map.add(label);
           this.overlays.stationLabels.push(label);
         }
       });
+    });
+
+    // 渲染后根据当前 zoom 应用渐进显示
+    this._applyMetroZoomVisibility(zoom);
+  },
+
+  // 地铁渐进式披露：根据缩放级别控制地铁覆盖物的可见性
+  _applyMetroZoomVisibility(zoom) {
+    if (!this.visible.metro) return;
+    const map = MapManager.map;
+
+    // 地铁线路：zoom<11 只显示主干线，zoom<12 +辅助线，zoom>=12 全部
+    // 注意：AMap 2.0 中 Polyline.hide() 不可靠，改用 setMap(null)/setMap(map)
+    this.overlays.metroLines.forEach(line => {
+      const imp = line._metroLineImportance || 1;
+      let show = false;
+      if (zoom >= 12) show = true;
+      else if (zoom >= 11 && imp <= 2) show = true;
+      else if (imp <= 1) show = true;
+      if (show) line.setMap(map); else line.setMap(null);
+    });
+
+    // 地铁站：zoom<12 只显示换乘站，zoom>=12 全部
+    this.overlays.metroStations.forEach(marker => {
+      const imp = marker._metroStationImportance || 3;
+      let show = false;
+      if (zoom >= 12) show = true;
+      else if (imp <= 1) show = true; // 换乘站始终可见
+      if (show) marker.setMap(map); else marker.setMap(null);
+    });
+
+    // 站名标注：zoom<12 只显示换乘站名，zoom>=12 全部
+    this.overlays.stationLabels.forEach(label => {
+      const metroImp = label._metroStationImportance;
+      if (metroImp === undefined) return; // 跳过 HSR 标签（由 onZoomChange 处理）
+      let show = false;
+      if (zoom >= 12) show = true;
+      else if (metroImp <= 1) show = true; // 换乘站名始终可见
+      if (show) label.setMap(map); else label.setMap(null);
     });
   },
 
