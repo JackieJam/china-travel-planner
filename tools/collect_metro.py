@@ -484,12 +484,27 @@ def main():
 
     print(f"目标城市 ({len(target_cities)}): {', '.join(target_cities)}")
 
-    all_metro = []
+    # --city 模式：加载现有数据，增量替换目标城市（而非覆盖）
+    existing_metro = []
+    if args.city:
+        existing_metro = load_json("metro.json")
+        if existing_metro:
+            existing_cities = [m["city"] for m in existing_metro]
+            print(f"  已有 {len(existing_metro)} 个城市数据，将增量更新")
+        else:
+            print(f"  metro.json 不存在或为空，将创建新文件")
+
+    all_metro = list(existing_metro)  # 保留现有数据
+    updated_cities = set()
+
     for i, city in enumerate(target_cities):
         print(f"\n>>> [{i+1}/{len(target_cities)}] {city}")
         result = collect_city_metro(city, dry_run=args.dry_run)
         if result and result["lines"]:
+            # 替换现有数据中的该城市
+            all_metro = [m for m in all_metro if m["city"] != city]
             all_metro.append(result)
+            updated_cities.add(city)
             total_stations = sum(len(l["stations"]) for l in result["lines"])
             print(f"  ✓ {city}: {len(result['lines'])} 条线路, {total_stations} 个站点")
         time.sleep(0.5)
@@ -500,9 +515,15 @@ def main():
         total_stations = sum(
             len(l["stations"]) for m in all_metro for l in m["lines"]
         )
+        updated_count = len(updated_cities)
+        preserved_count = len(all_metro) - updated_count
         print(f"\n{'='*50}")
         print(f"  采集完成！")
-        print(f"  {len(all_metro)} 城市, {total_lines} 条线路, {total_stations} 个站点")
+        print(f"  总计: {len(all_metro)} 城市, {total_lines} 条线路, {total_stations} 个站点")
+        if updated_cities:
+            print(f"  本次更新: {updated_count} 城市 ({', '.join(sorted(updated_cities))})")
+        if preserved_count > 0:
+            print(f"  保留未动: {preserved_count} 城市")
         print(f"{'='*50}")
     else:
         print("\n未采集到任何数据")
