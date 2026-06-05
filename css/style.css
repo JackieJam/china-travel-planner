@@ -330,8 +330,44 @@ body {
   border-left: 3px solid transparent;
 }
 
+.line-item.linkable,
+.train-route-stop.linkable,
+.travel-card.linkable {
+  cursor: pointer;
+}
+
+.line-item.linkable:hover,
+.train-route-stop.linkable:hover,
+.travel-card.linkable:hover {
+  background: #eef1f5;
+}
+
 .line-item .line-name { font-weight: 600; }
 .line-item .line-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin: 0 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detail-back-link:hover {
+  color: var(--accent-hover);
+}
+
+.detail-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
 
 .spot-card {
   padding: 10px 12px;
@@ -598,6 +634,7 @@ body {
   background: #f0f4f8;
   border-radius: var(--radius);
   text-align: center;
+  transition: background var(--transition);
 }
 
 .travel-icon {

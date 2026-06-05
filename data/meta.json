@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-05T12:26:17.100887",
+  "updatedAt": "2026-06-05T14:26:07.202412",
   "generatedAt": "2026-06-05T09:47:48.711574",
   "datasets": {
     "cities": {
@@ -19,10 +19,15 @@
       "count": 6231
     },
     "trains": {
-      "updatedAt": "2026-06-05T12:26:17.100878",
-      "count": 3005,
-      "source": "12306 leftTicket API"
+      "updatedAt": "2026-06-05T14:26:07.202405",
+      "count": 3188,
+      "source": "12306 leftTicket API",
+      "coverage": {
+        "legacy": 2986,
+        "endpoint_only": 169,
+        "line_interpolated": 33
+      }
     }
   },
-  "note": "车次数据来自 12306 实时接口查询（queryG），中间站时刻基于 Haversine 距离比例插值"
+  "note": "车次数据来自 12306 实时接口查询（queryG），部分跨线直达仅保存起终点；匹配到单条线路的中间站时刻基于 Haversine 距离比例插值"
 }

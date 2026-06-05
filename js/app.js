@@ -11,12 +11,15 @@
 // ==================== Map Manager ====================
 const MapManager = {
   map: null,
-  currentZoom: 4.5,
+  initialCenter: [104, 35],
+  initialZoom: 5,
+  chinaBounds: [[73, 18], [135, 54]],
+  currentZoom: 5,
 
   init(container) {
     this.map = new AMap.Map(container, {
-      zoom: 4.5,
-      center: [108, 36],
+      zoom: this.initialZoom,
+      center: this.initialCenter,
       viewMode: '2D',
       mapStyle: 'amap://styles/normal',
       resizeEnable: true,
@@ -47,8 +50,17 @@ const MapManager = {
     this.map.setBounds(bounds, false, [60, 60, 60, 60]);
   },
 
+  fitChinaView() {
+    const bounds = new AMap.Bounds(this.chinaBounds[0], this.chinaBounds[1]);
+    this.map.setBounds(bounds, false, [24, 24, 24, 24]);
+    this.currentZoom = this.map.getZoom();
+    UIController.updateZoomLevel(this.currentZoom);
+    LayerManager.onZoomChange(this.currentZoom);
+  },
+
   // 纯净模式：隐藏底图杂项，只保留省界/水系/自定义覆盖物
   _cleanMode: false,
+  _countryBorders: [],
   _provinceBorders: [],
   _provinceLabels: [],
 
@@ -58,35 +70,56 @@ const MapManager = {
       this.map.setFeatures(['bg', 'road', 'building', 'point']);
       this._cleanMode = false;
     } else {
-      // 纯净模式：只显示背景（含省界、水系）
-      this.map.setFeatures(['bg']);
+      // 纯净模式：保留背景和低噪音路网，隐藏 POI 与建筑信息。
+      this.map.setFeatures(['bg', 'road']);
       this._cleanMode = true;
     }
 
-    // Show/hide station labels
-    LayerManager.setStationLabelsVisible(this._cleanMode);
-
-    // Show/hide province borders
-    this._provinceBorders.forEach(o => {
-      if (this._cleanMode) o.show(); else o.hide();
-    });
-    this._provinceLabels.forEach(o => {
-      if (this._cleanMode) o.show(); else o.hide();
-    });
+    this._syncBoundaryVisibility();
+    LayerManager.onZoomChange(this.currentZoom);
 
     return this._cleanMode;
   },
 
+  _syncBoundaryVisibility() {
+    const boundaryOverlays = [
+      ...this._countryBorders,
+      ...this._provinceBorders,
+      ...this._provinceLabels,
+    ];
+    boundaryOverlays.forEach(o => {
+      if (this._cleanMode) o.show(); else o.hide();
+    });
+  },
+
   async loadProvinceBorders() {
     try {
-      const resp = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
-      if (!resp.ok) return;
-      const geojson = await resp.json();
+      const [countryResp, provinceResp] = await Promise.all([
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000.json'),
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json'),
+      ]);
+      if (!provinceResp.ok) return;
+      const provinceGeojson = await provinceResp.json();
 
+      this._countryBorders = [];
       this._provinceBorders = [];
       this._provinceLabels = [];
 
-      const features = geojson.features || [];
+      if (countryResp.ok) {
+        const countryGeojson = await countryResp.json();
+        const countryFeatures = countryGeojson.features || [];
+        countryFeatures.forEach(feature => this._drawBoundary(feature.geometry, {
+          strokeColor: '#3f5261',
+          strokeWeight: 2.4,
+          strokeOpacity: 0.95,
+          fillColor: 'transparent',
+          fillOpacity: 0,
+          zIndex: 8,
+          target: this._countryBorders,
+        }));
+      }
+
+      const features = provinceGeojson.features || [];
       for (const feature of features) {
         const name = feature.properties.name;
         const center = feature.properties.center || feature.properties.centroid;
@@ -102,16 +135,26 @@ const MapManager = {
         }
       }
 
-      // Initially hidden
-      this._provinceBorders.forEach(o => o.hide());
-      this._provinceLabels.forEach(o => o.hide());
+      this._syncBoundaryVisibility();
     } catch (e) {
       console.warn('省界数据加载失败:', e);
     }
   },
 
-  _drawPolygon(coordinates, name, center) {
+  _drawBoundary(geometry, options) {
+    if (!geometry) return;
+    if (geometry.type === 'Polygon') {
+      this._drawPolygon(geometry.coordinates, null, null, options);
+    } else if (geometry.type === 'MultiPolygon') {
+      for (const polygon of geometry.coordinates) {
+        this._drawPolygon(polygon, null, null, options);
+      }
+    }
+  },
+
+  _drawPolygon(coordinates, name, center, options = {}) {
     const map = this.map;
+    const target = options.target || this._provinceBorders;
 
     // coordinates is array of rings, first ring is outer boundary
     for (const ring of coordinates) {
@@ -120,16 +163,16 @@ const MapManager = {
 
       const polygon = new AMap.Polygon({
         path: path,
-        strokeColor: '#999',
-        strokeWeight: 1.5,
-        strokeOpacity: 0.7,
-        fillColor: 'transparent',
-        fillOpacity: 0,
-        zIndex: 5,
+        strokeColor: options.strokeColor || '#7f8f9c',
+        strokeWeight: options.strokeWeight || 1.1,
+        strokeOpacity: options.strokeOpacity || 0.7,
+        fillColor: options.fillColor || '#f6faf5',
+        fillOpacity: options.fillOpacity ?? 0.16,
+        zIndex: options.zIndex || 6,
       });
 
       map.add(polygon);
-      this._provinceBorders.push(polygon);
+      target.push(polygon);
     }
 
     // Province name label
@@ -242,6 +285,13 @@ const DataManager = {
     return '<div class="train-data-notice"><span>⚠</span> 模拟时刻表，非实时数据 · 购票请前往 12306</div>';
   },
 
+  trainCoverageText(train) {
+    if (train && train.coverage === 'endpoint_only') {
+      return '真实直达 · 经停待补全';
+    }
+    return '';
+  },
+
   async _fetch(url) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -271,8 +321,54 @@ const DataManager = {
     return this.metro.find(m => m.city === cityName);
   },
 
+  getHSRLine(lineName) {
+    return this.hsr.find(line => line.name === lineName);
+  },
+
+  getHSRStation(stationName) {
+    for (const line of this.hsr) {
+      const station = line.stations.find(s => s.name === stationName || s.name.includes(stationName));
+      if (station) return station;
+    }
+    return null;
+  },
+
+  getHSRStationLines(stationName) {
+    return this.hsr.filter(line =>
+      line.stations.some(s => s.name === stationName || s.name.includes(stationName))
+    );
+  },
+
+  getMetroLine(cityName, lineName) {
+    const metroData = this.getCityMetro(cityName);
+    if (!metroData) return null;
+    return metroData.lines.find(line => line.name === lineName);
+  },
+
+  getMetroStation(cityName, stationName) {
+    const metroData = this.getCityMetro(cityName);
+    if (!metroData) return null;
+    for (const line of metroData.lines) {
+      const station = line.stations.find(s => s.name === stationName);
+      if (station) return station;
+    }
+    return null;
+  },
+
+  getMetroStationLines(cityName, stationName) {
+    const metroData = this.getCityMetro(cityName);
+    if (!metroData) return [];
+    return metroData.lines.filter(line =>
+      line.stations.some(s => s.name === stationName)
+    );
+  },
+
   getCitySpots(cityName) {
     return this.spots.filter(s => s.city === cityName);
+  },
+
+  getSpot(name, cityName) {
+    return this.spots.find(s => s.name === name && (!cityName || s.city === cityName));
   },
 
   getStationTrains(stationName) {
@@ -569,6 +665,7 @@ const LayerManager = {
     hsrStations: [],
     hsrLabels: [],
     metroLines: [],
+    metroLineLabels: [],
     metroStations: [],
     spotMarkers: [],
     cityMarkers: [],
@@ -602,6 +699,7 @@ const LayerManager = {
         // 关闭地铁图层：用 setMap(null) 确保隐藏
         const map = MapManager.map;
         this.overlays.metroLines.forEach(o => o.setMap(null));
+        this.overlays.metroLineLabels.forEach(o => o.setMap(null));
         this.overlays.metroStations.forEach(o => o.setMap(null));
         this.overlays.stationLabels.forEach(o => {
           if (o._metroStationImportance !== undefined) o.setMap(null);
@@ -713,6 +811,7 @@ const LayerManager = {
 
     // 清除旧的地铁和景点图层
     this._clearOverlays(this.overlays.metroLines);
+    this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
     // Remove metro-contributed station labels
@@ -739,6 +838,7 @@ const LayerManager = {
   resetView() {
     this.selectedCity = null;
     this._clearOverlays(this.overlays.metroLines);
+    this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
     // Remove metro-contributed station labels
@@ -747,7 +847,7 @@ const LayerManager = {
       removed.forEach(o => MapManager.map.remove(o));
       this._metroLabelStart = undefined;
     }
-    MapManager.flyTo([108, 36], 4.5);
+    MapManager.fitChinaView();
     UIController.hideDetail();
     UIController.highlightCity(null);
   },
@@ -923,6 +1023,7 @@ const LayerManager = {
   // ---- Metro Layer ----
   _renderMetroLayer(cityName) {
     this._clearOverlays(this.overlays.metroLines);
+    this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     // Remove metro-contributed station labels
     if (this._metroLabelStart !== undefined) {
@@ -989,6 +1090,48 @@ const LayerManager = {
 
       map.add(polyline);
       this.overlays.metroLines.push(polyline);
+
+      const createMetroLineLabel = (position, density = 'anchor') => {
+        const lineLabel = new AMap.Text({
+          text: line.name,
+          position,
+          offset: new AMap.Pixel(0, 10),
+          style: {
+            'font-size': '11px',
+            'line-height': '1',
+            'color': line.color,
+            'background-color': 'rgba(255,255,255,0.9)',
+            'border': `1px solid ${line.color}`,
+            'padding': '2px 6px',
+            'border-radius': '3px',
+            'font-weight': '700',
+          },
+          zIndex: 84,
+        });
+        lineLabel._metroLineImportance = lineImportance;
+        lineLabel._metroLineLabelDensity = density;
+        map.add(lineLabel);
+        this.overlays.metroLineLabels.push(lineLabel);
+      };
+
+      const anchorIndexes = line.stations.length >= 18
+        ? [0.25, 0.5, 0.75].map(r => Math.floor((line.stations.length - 1) * r))
+        : [Math.floor(line.stations.length / 2)];
+      [...new Set(anchorIndexes)].forEach(idx => {
+        const labelStation = line.stations[idx];
+        if (!labelStation) return;
+        createMetroLineLabel(labelStation.center, 'anchor');
+      });
+
+      line.stations.forEach((station, idx) => {
+        const nextStation = line.stations[idx + 1];
+        if (!nextStation) return;
+        const midPoint = [
+          (station.center[0] + nextStation.center[0]) / 2,
+          (station.center[1] + nextStation.center[1]) / 2,
+        ];
+        createMetroLineLabel(midPoint, 'segment');
+      });
 
       // 地铁站标记
       line.stations.forEach(station => {
@@ -1067,6 +1210,18 @@ const LayerManager = {
       else if (zoom >= 11 && imp <= 2) show = true;
       else if (imp <= 1) show = true;
       if (show) line.setMap(map); else line.setMap(null);
+    });
+
+    // 地铁线路名：用户放大到城市尺度后显示，帮助区分同色邻近线路
+    this.overlays.metroLineLabels.forEach(label => {
+      const imp = label._metroLineImportance || 1;
+      const density = label._metroLineLabelDensity || 'anchor';
+      let show = false;
+      if (density === 'segment' && zoom >= 14) show = true;
+      else if (zoom >= 12) show = true;
+      else if (zoom >= 11 && imp <= 2) show = true;
+      else if (zoom >= 10 && imp <= 1) show = true;
+      if (show) label.setMap(map); else label.setMap(null);
     });
 
     // 地铁站：zoom<12 只显示换乘站，zoom>=12 全部
@@ -1238,6 +1393,8 @@ const LayerManager = {
 // ==================== UI Controller ====================
 const UIController = {
   elements: {},
+  currentDetailView: null,
+  detailHistory: [],
 
   init() {
     this.elements = {
@@ -1482,6 +1639,77 @@ const UIController = {
 
   // ---- Detail Panels ----
 
+  _detailViewKey(view) {
+    if (!view) return '';
+    const parts = [view.type, view.cityName, view.lineName, view.stationName, view.spotName, view.trainNumber, view.from, view.to];
+    return parts.filter(Boolean).join('|');
+  },
+
+  _setDetail(html, view, options = {}) {
+    if (!options.replace && this.currentDetailView &&
+        this._detailViewKey(this.currentDetailView) !== this._detailViewKey(view)) {
+      this.detailHistory.push(this.currentDetailView);
+    }
+    this.currentDetailView = view;
+    this.elements.detailContent.innerHTML = html;
+    this.elements.detailPanel.classList.remove('hidden');
+    this._renderDetailBack();
+  },
+
+  _renderDetailBack() {
+    if (!this.detailHistory.length) return;
+    this.elements.detailContent.insertAdjacentHTML(
+      'afterbegin',
+      '<button class="detail-back-link" id="detail-back-link">← 返回上一层</button>'
+    );
+    const btn = document.getElementById('detail-back-link');
+    if (btn) btn.addEventListener('click', () => this.goBackDetail());
+  },
+
+  goBackDetail() {
+    const prev = this.detailHistory.pop();
+    if (!prev) return;
+    this._restoreDetail(prev);
+  },
+
+  clearDetailHistory() {
+    this.detailHistory = [];
+    this.currentDetailView = null;
+  },
+
+  _restoreDetail(view) {
+    if (!view) return;
+    if (view.type === 'city') {
+      this.showCityDetail(view.cityName, { replace: true });
+    } else if (view.type === 'hsrLine') {
+      const line = DataManager.getHSRLine(view.lineName);
+      if (line) this.showHSRDetail(line, { replace: true });
+    } else if (view.type === 'hsrStation') {
+      const station = DataManager.getHSRStation(view.stationName) || view.station;
+      const lines = DataManager.getHSRStationLines(view.stationName);
+      if (station) this.showStationDetail(station, lines, { replace: true });
+    } else if (view.type === 'train') {
+      const train = DataManager.getTrainByNumber(view.trainNumber);
+      if (train) this.showTrainDetail(train, { replace: true });
+    } else if (view.type === 'metroLine') {
+      const line = DataManager.getMetroLine(view.cityName, view.lineName);
+      if (line) this.showMetroLineDetail(line, view.cityName, { replace: true });
+    } else if (view.type === 'metroStation') {
+      const station = DataManager.getMetroStation(view.cityName, view.stationName) || view.station;
+      const lines = DataManager.getMetroStationLines(view.cityName, view.stationName);
+      if (station) this.showMetroStationDetail(station, lines, view.cityName, { replace: true });
+    } else if (view.type === 'spot') {
+      const spot = DataManager.getSpot(view.spotName, view.cityName);
+      if (spot) this.showSpotDetail(spot, { replace: true });
+    } else if (view.type === 'routeResults') {
+      this.showRouteResults(view.from, view.to, view.result, { replace: true });
+    } else if (view.type === 'transferDetail') {
+      this.showTransferDetail(view.route, view.fromCity, view.toCity, { replace: true });
+    } else if (view.type === 'routeError') {
+      this.showRouteError(view.message || '路线查询失败', { replace: true });
+    }
+  },
+
   /** Initialize tab click behavior for any .detail-tabs container */
   _initTabs(container) {
     const tabs = container.querySelectorAll('.detail-tab');
@@ -1495,7 +1723,7 @@ const UIController = {
     });
   },
 
-  showCityDetail(cityName) {
+  showCityDetail(cityName, options = {}) {
     const city = DataManager.getCity(cityName);
     if (!city) return;
 
@@ -1580,7 +1808,7 @@ const UIController = {
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--hsr-color)"></span>高铁线路 (${hsrLines.length}条经过)</h3>`;
       hsrLines.forEach(line => {
-        html += `<div class="line-item" style="border-left-color:${line.color}">
+        html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-hsr-line="${line.name}">
           <div class="line-name">${line.name} ${DataManager.trainBadge()}</div>
           <div class="line-desc">${line.stations.map(s => s.name).join(' → ')}</div>
         </div>`;
@@ -1591,7 +1819,7 @@ const UIController = {
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--metro-color)"></span>地铁线路 (${metroData.lines.length}条)</h3>`;
       metroData.lines.forEach(line => {
-        html += `<div class="line-item" style="border-left-color:${line.color}">
+        html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-metro-line="${line.name}" data-city="${cityName}">
           <div class="line-name">${line.name}</div>
           <div class="line-desc">${line.stations.length}站 · ${line.stations.map(s => s.name).join(' → ')}</div>
         </div>`;
@@ -1637,8 +1865,7 @@ const UIController = {
     html += `</div>`; // end notes tab
 
     // Render
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'city', cityName }, options);
     this._initTabs(this.elements.detailContent);
 
     // ── Event bindings ──
@@ -1687,6 +1914,20 @@ const UIController = {
       item.addEventListener('click', () => {
         const line = DataManager.hsr.find(l => l.name === item.dataset.hsrLine);
         if (line) this.showHSRDetail(line);
+      });
+    });
+
+    this.elements.detailContent.querySelectorAll('.line-item[data-hsr-line]').forEach(item => {
+      item.addEventListener('click', () => {
+        const line = DataManager.getHSRLine(item.dataset.hsrLine);
+        if (line) this.showHSRDetail(line);
+      });
+    });
+
+    this.elements.detailContent.querySelectorAll('.line-item[data-metro-line]').forEach(item => {
+      item.addEventListener('click', () => {
+        const line = DataManager.getMetroLine(item.dataset.city, item.dataset.metroLine);
+        if (line) this.showMetroLineDetail(line, item.dataset.city);
       });
     });
 
@@ -1842,31 +2083,38 @@ const UIController = {
     return html;
   },
 
-  showHSRDetail(line) {
+  showHSRDetail(line, options = {}) {
     let html = `<h2>${line.name}</h2>`;
     html += `<div class="city-meta">高速铁路 · ${line.stations.length}个站点</div>`;
     html += `<div class="section"><h3><span class="dot" style="background:${line.color}"></span>途经站点</h3>`;
     line.stations.forEach((s, i) => {
-      html += `<div class="line-item" style="border-left-color:${line.color}; cursor:pointer;" data-city="${s.name}">
+      html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-hsr-station="${s.name}">
         <div class="line-name">${i + 1}. ${s.name}</div>
       </div>`;
     });
     html += '</div>';
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'hsrLine', lineName: line.name }, options);
 
-    this.elements.detailContent.querySelectorAll('.line-item[data-city]').forEach(item => {
-      item.addEventListener('click', () => LayerManager.selectCity(item.dataset.city));
+    this.elements.detailContent.querySelectorAll('.line-item[data-hsr-station]').forEach(item => {
+      item.addEventListener('click', async () => {
+        const stationName = item.dataset.hsrStation;
+        const station = DataManager.getHSRStation(stationName);
+        const lines = DataManager.getHSRStationLines(stationName);
+        if (station) {
+          if (!DataManager._trainsLoaded) await DataManager.loadTrains();
+          this.showStationDetail(station, lines);
+        }
+      });
     });
   },
 
-  showStationDetail(station, lines) {
+  showStationDetail(station, lines, options = {}) {
     let html = `<h2>${station.name}</h2>`;
     html += `<div class="city-meta">高铁站</div>`;
     html += `<div class="section"><h3><span class="dot" style="background:var(--hsr-color)"></span>经过线路</h3>`;
     lines.forEach(line => {
-      html += `<div class="line-item" style="border-left-color:${line.color}">
+      html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-hsr-line="${line.name}">
         <div class="line-name">${line.name}</div>
         <div class="line-desc">${line.stations.map(s => s.name).join(' → ')}</div>
       </div>`;
@@ -1906,8 +2154,14 @@ const UIController = {
       html += `</div></div>`;
     }
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'hsrStation', stationName: station.name, station }, options);
+
+    this.elements.detailContent.querySelectorAll('.line-item[data-hsr-line]').forEach(item => {
+      item.addEventListener('click', () => {
+        const line = DataManager.getHSRLine(item.dataset.hsrLine);
+        if (line) this.showHSRDetail(line);
+      });
+    });
 
     // Train card click handlers
     this.elements.detailContent.querySelectorAll('.train-card').forEach(card => {
@@ -1922,14 +2176,15 @@ const UIController = {
     });
   },
 
-  showTrainDetail(train) {
+  showTrainDetail(train, options = {}) {
     const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
     const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
     const color = typeColorMap[train.type] || '#E63946';
     const typeLabel = typeLabelMap[train.type] || '高铁';
 
     let html = `<h2>${train.number} ${DataManager.trainBadge()}</h2>`;
-    html += `<div class="city-meta">${typeLabel} · ${train.route.length}个站点</div>`;
+    const coverageText = DataManager.trainCoverageText(train);
+    html += `<div class="city-meta">${typeLabel} · ${coverageText || train.route.length + '个站点'}</div>`;
 
     // Calculate total journey time
     const routeStations = train.route.filter(s => s.arrive || s.depart);
@@ -1944,6 +2199,12 @@ const UIController = {
     // Clear highlight button
     html += `<button class="btn-clear-highlight" id="btn-clear-train-highlight">取消高亮</button>`;
 
+    if (train.coverage === 'endpoint_only') {
+      html += `<div class="route-disclaimer">
+        <span>ℹ</span> 该车次来自 12306 真实直达结果；当前仅保存起终点，中间经停站待后续补全。
+      </div>`;
+    }
+
     // Full route with timeline style
     html += `<div class="section"><h3><span class="dot" style="background:${color}"></span>途经站点</h3>`;
     html += `<div class="train-detail-route">`;
@@ -1953,7 +2214,7 @@ const UIController = {
         LayerManager._highlightedTrain.number === train.number;
       const highlightClass = isCurrentHighlight ? ' highlighted' : '';
 
-      html += `<div class="train-route-stop${highlightClass}">
+      html += `<div class="train-route-stop linkable${highlightClass}" data-hsr-station="${s.station}">
         <div class="route-stop-time">
           <span class="arrive-time">${s.arrive || '--:--'}</span>
           <span class="depart-time">${s.depart || '--:--'}</span>
@@ -1964,8 +2225,7 @@ const UIController = {
     });
     html += `</div></div>`;
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'train', trainNumber: train.number }, options);
 
     // Clear highlight button handler
     const clearBtn = document.getElementById('btn-clear-train-highlight');
@@ -1976,39 +2236,67 @@ const UIController = {
         clearBtn.disabled = true;
       });
     }
+
+    this.elements.detailContent.querySelectorAll('.train-route-stop[data-hsr-station]').forEach(item => {
+      item.addEventListener('click', async () => {
+        const stationName = item.dataset.hsrStation;
+        const station = DataManager.getHSRStation(stationName) || {
+          name: stationName,
+          center: train.route.find(s => s.station === stationName)?.center,
+        };
+        const lines = DataManager.getHSRStationLines(stationName);
+        if (station) {
+          if (!DataManager._trainsLoaded) await DataManager.loadTrains();
+          this.showStationDetail(station, lines);
+        }
+      });
+    });
   },
 
-  showMetroLineDetail(line, cityName) {
+  showMetroLineDetail(line, cityName, options = {}) {
     let html = `<h2>${line.name}</h2>`;
     html += `<div class="city-meta">${cityName}地铁 · ${line.stations.length}站</div>`;
     html += `<div class="section"><h3><span class="dot" style="background:${line.color}"></span>全部站点</h3>`;
     line.stations.forEach((s, i) => {
-      html += `<div class="line-item" style="border-left-color:${line.color}">
+      html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-metro-station="${s.name}" data-city="${cityName}">
         <div class="line-name">${i + 1}. ${s.name}</div>
       </div>`;
     });
     html += '</div>';
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'metroLine', cityName, lineName: line.name }, options);
+
+    this.elements.detailContent.querySelectorAll('.line-item[data-metro-station]').forEach(item => {
+      item.addEventListener('click', () => {
+        const station = DataManager.getMetroStation(item.dataset.city, item.dataset.metroStation);
+        const lines = DataManager.getMetroStationLines(item.dataset.city, item.dataset.metroStation);
+        if (station) this.showMetroStationDetail(station, lines, item.dataset.city);
+      });
+    });
   },
 
-  showMetroStationDetail(station, transferLines, cityName) {
+  showMetroStationDetail(station, transferLines, cityName, options = {}) {
     let html = `<h2>${station.name}</h2>`;
     html += `<div class="city-meta">${cityName}地铁站</div>`;
     html += `<div class="section"><h3><span class="dot" style="background:var(--metro-color)"></span>经过线路</h3>`;
     transferLines.forEach(line => {
-      html += `<div class="line-item" style="border-left-color:${line.color}">
+      html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-metro-line="${line.name}" data-city="${cityName}">
         <div class="line-name">${line.name}</div>
       </div>`;
     });
     html += '</div>';
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'metroStation', cityName, stationName: station.name, station }, options);
+
+    this.elements.detailContent.querySelectorAll('.line-item[data-metro-line]').forEach(item => {
+      item.addEventListener('click', () => {
+        const line = DataManager.getMetroLine(item.dataset.city, item.dataset.metroLine);
+        if (line) this.showMetroLineDetail(line, item.dataset.city);
+      });
+    });
   },
 
-  showSpotDetail(spot) {
+  showSpotDetail(spot, options = {}) {
     let html = '';
 
     // Image or placeholder at the top
@@ -2079,7 +2367,14 @@ const UIController = {
       const ns = spot.nearestStation;
       const typeIcon = ns.type === 'metro' ? '🚇' : '🚄';
       const distText = ns.distance < 1 ? `${Math.round(ns.distance * 1000)}m` : `${ns.distance}km`;
-      travelCards.push(`<div class="travel-card">
+      const canOpenStation = ns.type === 'metro'
+        ? DataManager.getMetroStation(spot.city, ns.name)
+        : DataManager.getHSRStation(ns.name);
+      const stationClass = canOpenStation ? ' linkable' : '';
+      const stationAttrs = canOpenStation
+        ? ` data-nearest-station="${ns.name}" data-station-type="${ns.type}" data-city="${spot.city}"`
+        : '';
+      travelCards.push(`<div class="travel-card${stationClass}"${stationAttrs}>
         <span class="travel-icon">${typeIcon}</span>
         <div class="travel-label">最近站点</div>
         <div class="travel-value">${ns.name} · ${distText}</div>
@@ -2093,12 +2388,34 @@ const UIController = {
       html += `<div class="section"><p class="spot-description">${spot.description}</p></div>`;
     }
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'spot', spotName: spot.name, cityName: spot.city }, options);
+
+    this.elements.detailContent.querySelectorAll('[data-nearest-station]').forEach(card => {
+      card.addEventListener('click', async () => {
+        const stationName = card.dataset.nearestStation;
+        if (card.dataset.stationType === 'metro') {
+          const station = DataManager.getMetroStation(card.dataset.city, stationName);
+          const lines = DataManager.getMetroStationLines(card.dataset.city, stationName);
+          if (station) {
+            MapManager.flyTo(station.center, 13);
+            this.showMetroStationDetail(station, lines, card.dataset.city);
+          }
+        } else {
+          const station = DataManager.getHSRStation(stationName);
+          const lines = DataManager.getHSRStationLines(stationName);
+          if (station) {
+            if (!DataManager._trainsLoaded) await DataManager.loadTrains();
+            MapManager.flyTo(station.center, 10);
+            this.showStationDetail(station, lines);
+          }
+        }
+      });
+    });
   },
 
   hideDetail() {
     this.elements.detailPanel.classList.add('hidden');
+    this.clearDetailHistory();
   },
 
   setStatus(text) {
@@ -2132,12 +2449,15 @@ const UIController = {
 
   // ---- Route Results ----
 
-  showRouteError(msg) {
-    this.elements.detailContent.innerHTML = `<h2>路线查询</h2><p style="color:#e74c3c;margin-top:12px">${msg}</p>`;
-    this.elements.detailPanel.classList.remove('hidden');
+  showRouteError(msg, options = {}) {
+    this._setDetail(
+      `<h2>路线查询</h2><p style="color:#e74c3c;margin-top:12px">${msg}</p>`,
+      { type: 'routeError', message: msg },
+      options
+    );
   },
 
-  showRouteResults(from, to, result) {
+  showRouteResults(from, to, result, options = {}) {
     const { direct, transfer } = result;
     const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
     const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
@@ -2196,7 +2516,7 @@ const UIController = {
               <span class="route-station-name">${r.toStation}</span>
             </div>
           </div>
-          <div class="route-card-meta">${r.stops}站 · ${r.train.name}</div>
+          <div class="route-card-meta">${DataManager.trainCoverageText(r.train) || `${r.stops}站 · ${r.train.name}`}</div>
         </div>`;
       });
       html += `</div></div>`;
@@ -2236,8 +2556,7 @@ const UIController = {
       html += `</div></div>`;
     }
 
-    this.elements.detailContent.innerHTML = html;
-    this.elements.detailPanel.classList.remove('hidden');
+    this._setDetail(html, { type: 'routeResults', from, to, result }, options);
 
     // Click handlers for direct train cards
     this.elements.detailContent.querySelectorAll('.route-card[data-train]').forEach(card => {
@@ -2259,7 +2578,7 @@ const UIController = {
     });
   },
 
-  showTransferDetail(r, fromCity, toCity) {
+  showTransferDetail(r, fromCity, toCity, options = {}) {
     const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
     let html = `<h2>${fromCity} → ${toCity} 换乘方案</h2>`;
     html += `<div class="city-meta">经 ${r.transferStation} 换乘</div>`;
@@ -2290,12 +2609,20 @@ const UIController = {
     html += `<div class="train-journey-time" style="margin-top:12px">全程: ${DataManager._formatDuration(r.duration)}</div>`;
 
     // Buttons to view each train's full route
-    html += `<div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-back-national" onclick="LayerManager.highlightTrain('${r.train1.number}'); UIController.showTrainDetail(DataManager.getTrainByNumber('${r.train1.number}'))">查看 ${r.train1.number}</button>
-      <button class="btn-back-national" onclick="LayerManager.highlightTrain('${r.train2.number}'); UIController.showTrainDetail(DataManager.getTrainByNumber('${r.train2.number}'))">查看 ${r.train2.number}</button>
+    html += `<div class="detail-action-row">
+      <button class="btn-back-national" data-train="${r.train1.number}">查看 ${r.train1.number}</button>
+      <button class="btn-back-national" data-train="${r.train2.number}">查看 ${r.train2.number}</button>
     </div>`;
 
-    this.elements.detailContent.innerHTML = html;
+    this._setDetail(html, { type: 'transferDetail', route: r, fromCity, toCity }, options);
+
+    this.elements.detailContent.querySelectorAll('button[data-train]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        LayerManager.highlightTrain(btn.dataset.train);
+        const train = DataManager.getTrainByNumber(btn.dataset.train);
+        if (train) this.showTrainDetail(train);
+      });
+    });
   },
 };
 
@@ -2333,4 +2660,11 @@ const UIController = {
 
   // 初始化图层
   LayerManager.init();
+  MapManager.fitChinaView();
+
+  // 默认进入纯净模式：减少底图噪音，优先展示规划所需的信息。
+  const isClean = MapManager.toggleCleanMode();
+  UIController.elements.mapModeToggle.classList.toggle('active', isClean);
+  UIController.elements.mapModeToggle.textContent = isClean ? '标准模式' : '纯净模式';
+  UIController.updateMapModeStatus(isClean);
 })();

@@ -19,6 +19,8 @@
   python3 -u tools/fetch_real_trains.py --dry-run             # 预览不写入
   python3 -u tools/fetch_real_trains.py --rounds 1            # 只跑1轮
   python3 -u tools/fetch_real_trains.py --max-pairs 10        # 限制查询对数
+  uv run tools/fetch_real_trains.py --pair 深圳北 成都东 --merge-existing
+  uv run tools/fetch_real_trains.py --pair-file data/priority_train_pairs.json --merge-existing
 """
 
 import argparse
@@ -96,6 +98,18 @@ def load_json(path):
 def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_pair_file(path):
+    """读取批量站点对，支持 [[from,to], ...] 或 [{"from":...,"to":...}, ...]。"""
+    raw = load_json(path)
+    pairs = []
+    for item in raw:
+        if isinstance(item, list) and len(item) == 2:
+            pairs.append((item[0], item[1]))
+        elif isinstance(item, dict) and item.get("from") and item.get("to"):
+            pairs.append((item["from"], item["to"]))
+    return pairs
 
 
 # ── Station Codes ──
@@ -202,6 +216,77 @@ def _fuzzy_find(station_names, target):
     return None
 
 
+def build_station_index(hsr_lines):
+    """构建站名到站点坐标的索引，用于跨线直达的端点兜底。"""
+    stations = {}
+    for line in hsr_lines:
+        for station in line.get("stations", []):
+            name = station.get("name")
+            if name and name not in stations:
+                stations[name] = station
+    return stations
+
+
+def endpoint_route(from_station, to_station, station_index, start_time, arrive_time):
+    """无法匹配单条本地线路时，保留真实直达车次的起终点。"""
+    from_info = station_index.get(from_station)
+    to_info = station_index.get(to_station)
+    if not from_info or not to_info:
+        return []
+    return [
+        {
+            "station": from_station,
+            "center": from_info["center"],
+            "arrive": "",
+            "depart": start_time,
+        },
+        {
+            "station": to_station,
+            "center": to_info["center"],
+            "arrive": arrive_time,
+            "depart": "",
+        },
+    ]
+
+
+def route_quality(train):
+    route = train.get("route", [])
+    coverage = train.get("coverage", "line_interpolated")
+    if coverage == "line_interpolated":
+        if len(route) <= 2 and str(train.get("name", "")).endswith("直达"):
+            return 1
+        return 3
+    if len(route) > 2:
+        return 2
+    return 1
+
+
+def route_span_minutes(train):
+    stops = [s for s in train.get("route", []) if s.get("arrive") or s.get("depart")]
+    if len(stops) < 2:
+        return 0
+    start = stops[0].get("depart") or stops[0].get("arrive")
+    end = stops[-1].get("arrive") or stops[-1].get("depart")
+    if not start or not end:
+        return 0
+    span = time_to_minutes(end) - time_to_minutes(start)
+    if span < 0:
+        span += 24 * 60
+    return span
+
+
+def merge_train(all_trains, train):
+    """合并同车次时保留信息量更高的路线。"""
+    existing = all_trains.get(train["number"])
+    if existing and route_quality(existing) > route_quality(train):
+        return False
+    if existing and route_quality(existing) == route_quality(train):
+        if route_span_minutes(existing) >= route_span_minutes(train):
+            return False
+    all_trains[train["number"]] = train
+    return not existing
+
+
 # ── Interpolate intermediate stops ──
 def interpolate_route(line_stations, from_idx, to_idx, start_time, arrive_time):
     segment = line_stations[from_idx:to_idx + 1]
@@ -289,12 +374,26 @@ def main():
                         help="限制查询城市对数（0=全部）")
     parser.add_argument("--rounds", type=int, default=DEFAULT_ROUNDS,
                         help="重试轮数（默认3）")
+    parser.add_argument("--pair", nargs=2, action="append", metavar=("FROM", "TO"),
+                        help="指定 12306 站点对，可重复传入，如 --pair 深圳北 成都东")
+    parser.add_argument("--pair-file", type=Path,
+                        help="从 JSON 文件读取站点对，支持列表或 from/to 对象")
+    parser.add_argument("--merge-existing", action="store_true",
+                        help="写入时合并现有 trains.json，而不是仅写入本次采集结果")
     args = parser.parse_args()
 
     hsr = load_json(DATA_DIR / "hsr.json")
+    station_index = build_station_index(hsr)
     station_codes, code_to_name = fetch_station_codes()
 
-    pairs = build_query_pairs(hsr, station_codes)
+    pairs = []
+    if args.pair:
+        pairs.extend(tuple(pair) for pair in args.pair)
+    if args.pair_file:
+        pairs.extend(load_pair_file(args.pair_file))
+    if not pairs:
+        pairs = build_query_pairs(hsr, station_codes)
+    pairs = list(dict.fromkeys(pairs))
     if args.max_pairs > 0:
         pairs = pairs[:args.max_pairs]
     print(f"查询城市对: {len(pairs)} 对", flush=True)
@@ -304,6 +403,10 @@ def main():
     print(f"查询日期: {tomorrow}", flush=True)
 
     all_trains = {}
+    if args.merge_existing and (DATA_DIR / "trains.json").exists():
+        existing = load_json(DATA_DIR / "trains.json")
+        all_trains = {t["number"]: t for t in existing if t.get("number")}
+        print(f"合并模式: 已载入现有车次 {len(all_trains)} 条", flush=True)
     total_results = 0
     total_api_calls = 0
     total_success = 0
@@ -357,23 +460,27 @@ def main():
                 if not parsed:
                     continue
                 train_code = parsed["train_code"]
-                if train_code in all_trains:
-                    continue
-
                 from_station = code_to_name.get(parsed["from_code"], from_name)
                 to_station = code_to_name.get(parsed["to_code"], to_name)
 
                 match = match_train_to_line(
                     train_code, from_station, to_station, hsr
                 )
-                if not match:
-                    continue
-
-                line, from_idx, to_idx = match
-                route = interpolate_route(
-                    line["stations"], from_idx, to_idx,
-                    parsed["start_time"], parsed["arrive_time"]
-                )
+                if match:
+                    line, from_idx, to_idx = match
+                    route = interpolate_route(
+                        line["stations"], from_idx, to_idx,
+                        parsed["start_time"], parsed["arrive_time"]
+                    )
+                    line_name = line["name"]
+                    coverage = "line_interpolated"
+                else:
+                    route = endpoint_route(
+                        from_station, to_station, station_index,
+                        parsed["start_time"], parsed["arrive_time"]
+                    )
+                    line_name = f"{from_station}—{to_station}直达"
+                    coverage = "endpoint_only"
 
                 if route:
                     code_prefix = train_code[0] if train_code else "G"
@@ -383,13 +490,17 @@ def main():
                         train_type = code_prefix
                     else:
                         train_type = "K"
-                    all_trains[train_code] = {
+                    train = {
                         "number": train_code,
                         "type": train_type,
-                        "name": line["name"],
+                        "name": line_name,
+                        "coverage": coverage,
+                        "sourcePair": [from_name, to_name],
+                        "queryDate": tomorrow,
                         "route": route,
                     }
-                    new_in_round += 1
+                    if merge_train(all_trains, train):
+                        new_in_round += 1
 
             # Progress
             if (idx + 1) % 5 == 0:
@@ -428,7 +539,9 @@ def main():
     trains_list = sorted(all_trains.values(), key=lambda t: t["number"])
 
     types = Counter(t["type"] for t in trains_list)
+    coverages = Counter(t.get("coverage", "legacy") for t in trains_list)
     print(f"类型分布: {dict(types)}", flush=True)
+    print(f"覆盖度分布: {dict(coverages)}", flush=True)
 
     # Show a few samples
     for t in trains_list[:3]:
@@ -447,10 +560,11 @@ def main():
             "updatedAt": datetime.now().isoformat(),
             "count": len(trains_list),
             "source": "12306 leftTicket API",
+            "coverage": dict(coverages),
         }
         meta["updatedAt"] = datetime.now().isoformat()
         meta["note"] = ("车次数据来自 12306 实时接口查询（queryG），"
-                        "中间站时刻基于 Haversine 距离比例插值")
+                        "部分跨线直达仅保存起终点；匹配到单条线路的中间站时刻基于 Haversine 距离比例插值")
         save_json(meta_path, meta)
         print("meta.json 已更新", flush=True)
     else:
