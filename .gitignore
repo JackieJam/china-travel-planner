@@ -7,3 +7,4 @@ __pycache__/
 .idea/
 data/spots_backup.json
 js/config.js
+AGENTS.md

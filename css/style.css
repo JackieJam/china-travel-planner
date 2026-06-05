@@ -356,6 +356,227 @@ body {
   margin-left: 4px;
 }
 
+/* ===== Tab System (Detail Panel) ===== */
+.detail-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin: 0 -20px;
+  padding: 0 20px;
+  background: #fafbfc;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.detail-tab {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.detail-tab:hover { color: var(--text-dark); }
+
+.detail-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.detail-tab-content {
+  display: none;
+  padding-top: 12px;
+}
+
+.detail-tab-content.active {
+  display: block;
+}
+
+/* ===== Spot Filter Bar ===== */
+.spot-filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.spot-filter-chip {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #555;
+  user-select: none;
+}
+
+.spot-filter-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.spot-filter-chip:hover:not(.active) {
+  background: #f0f4f8;
+  border-color: #ccc;
+}
+
+.spot-sort-select {
+  padding: 4px 8px;
+  font-size: 11px;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: #555;
+  outline: none;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+/* ===== Route Reference Badge ===== */
+.ref-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffe0b2;
+  vertical-align: middle;
+}
+
+.ref-badge.simulated {
+  background: #fff8e1;
+  color: #f57f17;
+  border-color: #fff176;
+}
+
+/* ===== Overview Cards ===== */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.overview-card {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid #eee;
+}
+
+.overview-card:hover {
+  background: #eef1f5;
+  border-color: #ddd;
+}
+
+.overview-card .ov-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.overview-card .ov-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.overview-card.hsr .ov-number { color: var(--hsr-color); }
+.overview-card.metro .ov-number { color: var(--metro-color); }
+.overview-card.spots .ov-number { color: var(--spots-color); }
+
+.overview-highlights {
+  margin-bottom: 16px;
+}
+
+.overview-highlights h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.highlight-item:hover { background: #eef1f5; }
+
+.highlight-item .hl-icon { font-size: 16px; }
+.highlight-item .hl-name { font-size: 13px; font-weight: 500; color: var(--text-dark); flex: 1; }
+.highlight-item .hl-meta { font-size: 11px; color: var(--text-muted); }
+
+/* ===== Data Notes Panel ===== */
+.data-notes {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.data-notes h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 16px 0 6px;
+}
+
+.data-notes h4:first-child { margin-top: 0; }
+
+.data-notes .note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.data-notes .note-icon { flex-shrink: 0; font-size: 14px; }
+.data-notes .note-text { flex: 1; }
+.data-notes .note-warn { color: #e65100; }
+
+.data-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.data-notes th, .data-notes td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.data-notes th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 /* ===== Travel Info (Spot Detail) ===== */
 .travel-info-row {
   display: flex;

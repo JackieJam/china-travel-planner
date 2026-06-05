@@ -1386,7 +1386,7 @@ const UIController = {
       this.showRouteResults(from, to, result);
 
       searchBtn.disabled = false;
-      searchBtn.textContent = '查询车次';
+      searchBtn.textContent = '路线参考';
     };
 
     searchBtn.addEventListener('click', doSearch);
@@ -1462,6 +1462,20 @@ const UIController = {
   },
 
   // ---- Detail Panels ----
+
+  /** Initialize tab click behavior for any .detail-tabs container */
+  _initTabs(container) {
+    const tabs = container.querySelectorAll('.detail-tab');
+    const contents = container.querySelectorAll('.detail-tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle('active', t === tab));
+        contents.forEach(c => c.classList.toggle('active', c.dataset.tabContent === target));
+      });
+    });
+  },
+
   showCityDetail(cityName) {
     const city = DataManager.getCity(cityName);
     if (!city) return;
@@ -1470,33 +1484,90 @@ const UIController = {
     const metroData = DataManager.getCityMetro(cityName);
     const spots = DataManager.getCitySpots(cityName);
 
-    // Back button
+    // Header
     let html = `<button class="btn-back-national" id="btn-back-national">← 返回全国视图</button>`;
-
     html += `<h2>${city.name}</h2>`;
     html += `<div class="city-meta">${city.province || ''} · ${city.description || ''}</div>`;
 
-    // Summary counts
-    html += `<div class="city-summary-counts">`;
-    if (hsrLines.length) html += `<span class="count-badge hsr">🚄 高铁 ${hsrLines.length}</span>`;
-    if (metroData) html += `<span class="count-badge metro">🚇 地铁 ${metroData.lines.length}</span>`;
-    if (spots.length) html += `<span class="count-badge spots">📍 景点 ${spots.length}</span>`;
+    // Tab bar
+    html += `<div class="detail-tabs">`;
+    html += `<div class="detail-tab active" data-tab="overview">概览</div>`;
+    html += `<div class="detail-tab" data-tab="transport">交通${hsrLines.length || metroData ? '' : ''}</div>`;
+    html += `<div class="detail-tab" data-tab="spots">景点</div>`;
+    html += `<div class="detail-tab" data-tab="notes">数据</div>`;
     html += `</div>`;
 
-    // 高铁信息
+    // ── Tab 1: Overview ──
+    html += `<div class="detail-tab-content active" data-tab-content="overview">`;
+    html += `<div class="overview-grid">`;
+    if (hsrLines.length) {
+      html += `<div class="overview-card hsr" data-goto-tab="transport">
+        <div class="ov-number">${hsrLines.length}</div><div class="ov-label">高铁线路经过</div></div>`;
+    }
+    if (metroData) {
+      html += `<div class="overview-card metro" data-goto-tab="transport">
+        <div class="ov-number">${metroData.lines.length}</div><div class="ov-label">地铁线路</div></div>`;
+    }
+    if (spots.length) {
+      const withImages = spots.filter(s => s.image || (s.images && s.images.length)).length;
+      html += `<div class="overview-card spots" data-goto-tab="spots">
+        <div class="ov-number">${spots.length}</div><div class="ov-label">景点 · ${withImages} 有图</div></div>`;
+    }
+    // Quick route card
+    html += `<div class="overview-card" id="overview-route-card">
+      <div class="ov-number" style="font-size:16px">🔍</div><div class="ov-label">查询到这里的路线</div></div>`;
+    html += `</div>`;
+
+    // Highlights: top 3 spots with images
+    const topSpots = spots.filter(s => s.image || (s.images && s.images.length)).slice(0, 3);
+    if (topSpots.length) {
+      html += `<div class="overview-highlights"><h4>推荐景点</h4>`;
+      topSpots.forEach(s => {
+        const dur = s.visitDuration ? `${Math.floor(s.visitDuration[0]/60)}~${Math.floor(s.visitDuration[1]/60)}h` : '';
+        const ns = s.nearestStation;
+        const distText = ns ? (ns.distance < 1 ? `${Math.round(ns.distance*1000)}m` : `${ns.distance}km`) : '';
+        html += `<div class="highlight-item" data-spot="${s.name}">
+          <span class="hl-icon">${{自然:'🏞️',历史:'🏛️',文化:'🎭',现代:'🏙️'}[s.category] || '📍'}</span>
+          <span class="hl-name">${s.name}</span>
+          <span class="hl-meta">${dur}${distText ? ' · ' + distText : ''}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Quick transport summary
+    if (hsrLines.length) {
+      const trunkLines = hsrLines.filter(l => l.type === 'G' && ['京沪','京广','京哈','沪昆','沿海','杭深','兰新','青银'].some(k => l.name.includes(k)));
+      html += `<div class="overview-highlights"><h4>主要铁路</h4>`;
+      const showLines = trunkLines.length ? trunkLines : hsrLines.slice(0, 3);
+      showLines.forEach(l => {
+        html += `<div class="highlight-item" data-hsr-line="${l.name}">
+          <span class="hl-icon">🚄</span>
+          <span class="hl-name">${l.name}</span>
+          <span class="hl-meta">${l.stations.length}站 · ${l.type || 'G'}</span>
+        </div>`;
+      });
+      if (hsrLines.length > showLines.length) {
+        html += `<div class="highlight-item" data-goto-tab="transport" style="color:var(--accent);font-size:12px">
+          查看全部 ${hsrLines.length} 条 →</div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`; // end overview tab
+
+    // ── Tab 2: Transport ──
+    html += `<div class="detail-tab-content" data-tab-content="transport">`;
     if (hsrLines.length) {
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--hsr-color)"></span>高铁线路 (${hsrLines.length}条经过)</h3>`;
       hsrLines.forEach(line => {
         html += `<div class="line-item" style="border-left-color:${line.color}">
-          <div class="line-name">${line.name}</div>
+          <div class="line-name">${line.name} <span class="ref-badge simulated">参考</span></div>
           <div class="line-desc">${line.stations.map(s => s.name).join(' → ')}</div>
         </div>`;
       });
       html += '</div>';
     }
-
-    // 地铁信息
     if (metroData) {
       html += `<div class="section">
         <h3><span class="dot" style="background:var(--metro-color)"></span>地铁线路 (${metroData.lines.length}条)</h3>`;
@@ -1508,62 +1579,243 @@ const UIController = {
       });
       html += '</div>';
     }
-
-    // 景点信息 (with thumbnails)
-    if (spots.length) {
-      const bgColors = {
-        '自然': '#27ae60', '历史': '#8e44ad', '文化': '#d35400',
-        '现代': '#2980b9',
-      };
-      html += `<div class="section">
-        <h3><span class="dot" style="background:var(--spots-color)"></span>著名景点 (${spots.length}个)</h3>`;
-      spots.forEach(spot => {
-        const tag = spot.category ? `<span class="spot-tag">${spot.category}</span>` : '';
-        const hasThumb = spot.image || (spot.images && spot.images.length > 0);
-        const thumbSrc = spot.image || (spot.images && spot.images[0]);
-        const descPreview = (spot.description || '').slice(0, 40);
-
-        if (hasThumb) {
-          html += `<div class="spot-card with-thumb" data-spot="${spot.name}">
-            <img class="spot-thumb" src="${thumbSrc}" alt="${spot.name}" loading="lazy"
-                 onerror="this.outerHTML='<div class=\\'spot-thumb-placeholder\\' style=\\'background:${bgColors[spot.category] || '#4a90d9'}\\'>📍</div>'">
-            <div class="spot-info">
-              <div class="spot-name">${spot.name}${tag}</div>
-              <div class="spot-meta">${descPreview}</div>
-            </div>
-          </div>`;
-        } else {
-          const bg = bgColors[spot.category] || '#4a90d9';
-          html += `<div class="spot-card with-thumb" data-spot="${spot.name}">
-            <div class="spot-thumb-placeholder" style="background:${bg}">📍</div>
-            <div class="spot-info">
-              <div class="spot-name">${spot.name}${tag}</div>
-              <div class="spot-meta">${descPreview}</div>
-            </div>
-          </div>`;
-        }
-      });
-      html += '</div>';
+    if (!hsrLines.length && !metroData) {
+      html += `<div class="route-empty">该城市暂无交通数据</div>`;
     }
+    html += `</div>`; // end transport tab
 
+    // ── Tab 3: Spots ──
+    html += `<div class="detail-tab-content" data-tab-content="spots">`;
+    if (spots.length) {
+      // Filter bar
+      const categories = [...new Set(spots.map(s => s.category).filter(Boolean))];
+      html += `<div class="spot-filter-bar" id="spot-filter-bar">`;
+      html += `<div class="spot-filter-chip active" data-cat="all">全部 ${spots.length}</div>`;
+      categories.forEach(cat => {
+        const count = spots.filter(s => s.category === cat).length;
+        html += `<div class="spot-filter-chip" data-cat="${cat}">${cat} ${count}</div>`;
+      });
+      html += `<select class="spot-sort-select" id="spot-sort">
+        <option value="default">默认排序</option>
+        <option value="distance">按交通距离</option>
+        <option value="duration">按游览时长</option>
+        <option value="price">按门票价格</option>
+      </select>`;
+      html += `</div>`;
+
+      // Spot list container (will be filtered by JS)
+      html += `<div id="spot-list-container">`;
+      html += this._renderSpotCards(spots);
+      html += `</div>`;
+    } else {
+      html += `<div class="route-empty">该城市暂无景点数据</div>`;
+    }
+    html += `</div>`; // end spots tab
+
+    // ── Tab 4: Data Notes ──
+    html += `<div class="detail-tab-content" data-tab-content="notes">`;
+    html += this._renderDataNotes(city, hsrLines, metroData, spots);
+    html += `</div>`; // end notes tab
+
+    // Render
     this.elements.detailContent.innerHTML = html;
     this.elements.detailPanel.classList.remove('hidden');
+    this._initTabs(this.elements.detailContent);
+
+    // ── Event bindings ──
 
     // Back button
-    document.getElementById('btn-back-national').addEventListener('click', () => {
-      LayerManager.resetView();
+    document.getElementById('btn-back-national').addEventListener('click', () => LayerManager.resetView());
+
+    // Tab cross-navigation (overview cards → other tabs)
+    this.elements.detailContent.querySelectorAll('[data-goto-tab]').forEach(el => {
+      el.addEventListener('click', () => {
+        const target = el.dataset.gotoTab;
+        const tab = this.elements.detailContent.querySelector(`.detail-tab[data-tab="${target}"]`);
+        if (tab) tab.click();
+      });
     });
 
-    // 景点卡片点击定位 + 打开详情
-    this.elements.detailContent.querySelectorAll('.spot-card').forEach(card => {
+    // Overview route card → focus route search
+    const routeCard = document.getElementById('overview-route-card');
+    if (routeCard) {
+      routeCard.addEventListener('click', () => {
+        const toInput = document.getElementById('route-to');
+        if (toInput) {
+          toInput.value = city.name;
+          toInput.focus();
+          // Collapse sidebar on mobile
+          if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.add('collapsed');
+          }
+        }
+      });
+    }
+
+    // Overview highlight spots → open detail
+    this.elements.detailContent.querySelectorAll('.highlight-item[data-spot]').forEach(item => {
+      item.addEventListener('click', () => {
+        const spot = DataManager.spots.find(s => s.name === item.dataset.spot);
+        if (spot) {
+          MapManager.flyTo(spot.center, 14);
+          this.showSpotDetail(spot);
+        }
+      });
+    });
+
+    // Overview HSR line items → show detail
+    this.elements.detailContent.querySelectorAll('.highlight-item[data-hsr-line]').forEach(item => {
+      item.addEventListener('click', () => {
+        const line = DataManager.hsr.find(l => l.name === item.dataset.hsrLine);
+        if (line) this.showHSRDetail(line);
+      });
+    });
+
+    // Spot cards click
+    this._bindSpotCards();
+
+    // Spot filter & sort
+    this._bindSpotFilters(spots);
+  },
+
+  _renderSpotCards(spots) {
+    const bgColors = { '自然': '#27ae60', '历史': '#8e44ad', '文化': '#d35400', '现代': '#2980b9' };
+    let html = '';
+    spots.forEach(spot => {
+      const tag = spot.category ? `<span class="spot-tag">${spot.category}</span>` : '';
+      const hasThumb = spot.image || (spot.images && spot.images.length > 0);
+      const thumbSrc = spot.image || (spot.images && spot.images[0]);
+      const ns = spot.nearestStation;
+      const distText = ns ? (ns.distance < 1 ? `${Math.round(ns.distance*1000)}m` : `${ns.distance}km`) : '';
+      const durText = spot.visitDuration ? `${Math.floor(spot.visitDuration[0]/60)}~${Math.floor(spot.visitDuration[1]/60)}h` : '';
+      const priceText = spot.ticketPrice ? (spot.ticketPrice[0] === 0 && spot.ticketPrice[1] === 0 ? '免费' : `¥${spot.ticketPrice[0]}~${spot.ticketPrice[1]}`) : '';
+      const metaParts = [durText, priceText, distText ? `📍${distText}` : ''].filter(Boolean);
+
+      if (hasThumb) {
+        html += `<div class="spot-card with-thumb" data-spot="${spot.name}"
+                      data-cat="${spot.category || ''}"
+                      data-dist="${ns ? ns.distance : 999}"
+                      data-dur="${spot.visitDuration ? spot.visitDuration[0] : 0}"
+                      data-price="${spot.ticketPrice ? spot.ticketPrice[0] : 0}">
+          <img class="spot-thumb" src="${thumbSrc}" alt="${spot.name}" loading="lazy"
+               onerror="this.outerHTML='<div class=\\'spot-thumb-placeholder\\' style=\\'background:${bgColors[spot.category] || '#4a90d9'}\\'>📍</div>'">
+          <div class="spot-info">
+            <div class="spot-name">${spot.name}${tag}</div>
+            <div class="spot-meta">${metaParts.join(' · ')}</div>
+          </div>
+        </div>`;
+      } else {
+        const bg = bgColors[spot.category] || '#4a90d9';
+        html += `<div class="spot-card with-thumb" data-spot="${spot.name}"
+                      data-cat="${spot.category || ''}"
+                      data-dist="${ns ? ns.distance : 999}"
+                      data-dur="${spot.visitDuration ? spot.visitDuration[0] : 0}"
+                      data-price="${spot.ticketPrice ? spot.ticketPrice[0] : 0}">
+          <div class="spot-thumb-placeholder" style="background:${bg}">📍</div>
+          <div class="spot-info">
+            <div class="spot-name">${spot.name}${tag}</div>
+            <div class="spot-meta">${metaParts.join(' · ')}</div>
+          </div>
+        </div>`;
+      }
+    });
+    return html;
+  },
+
+  _bindSpotCards() {
+    this.elements.detailContent.querySelectorAll('.spot-card[data-spot]').forEach(card => {
       card.addEventListener('click', () => {
         const spot = DataManager.spots.find(s => s.name === card.dataset.spot);
         if (spot) {
           MapManager.flyTo(spot.center, 14);
-          UIController.showSpotDetail(spot);
+          this.showSpotDetail(spot);
         }
       });
     });
+  },
+
+  _bindSpotFilters(allSpots) {
+    const filterBar = document.getElementById('spot-filter-bar');
+    const sortSelect = document.getElementById('spot-sort');
+    const container = document.getElementById('spot-list-container');
+    if (!filterBar || !container) return;
+
+    let activeCat = 'all';
+    let sortMode = 'default';
+
+    const applyFilter = () => {
+      let filtered = activeCat === 'all' ? allSpots : allSpots.filter(s => s.category === activeCat);
+
+      // Sort
+      if (sortMode === 'distance') {
+        filtered = [...filtered].sort((a, b) => (a.nearestStation?.distance || 999) - (b.nearestStation?.distance || 999));
+      } else if (sortMode === 'duration') {
+        filtered = [...filtered].sort((a, b) => (b.visitDuration?.[0] || 0) - (a.visitDuration?.[0] || 0));
+      } else if (sortMode === 'price') {
+        filtered = [...filtered].sort((a, b) => (a.ticketPrice?.[0] || 0) - (b.ticketPrice?.[0] || 0));
+      }
+
+      container.innerHTML = this._renderSpotCards(filtered);
+      this._bindSpotCards();
+    };
+
+    filterBar.querySelectorAll('.spot-filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        activeCat = chip.dataset.cat;
+        filterBar.querySelectorAll('.spot-filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+        applyFilter();
+      });
+    });
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => {
+        sortMode = sortSelect.value;
+        applyFilter();
+      });
+    }
+  },
+
+  _renderDataNotes(city, hsrLines, metroData, spots) {
+    let html = `<div class="data-notes">`;
+
+    html += `<h4>数据概览</h4>`;
+    html += `<table>
+      <tr><th>类型</th><th>数量</th><th>来源</th></tr>`;
+    if (hsrLines.length) {
+      html += `<tr><td>高铁线路</td><td>${hsrLines.length} 条</td><td>公开线路数据</td></tr>`;
+    }
+    if (metroData) {
+      const totalStations = metroData.lines.reduce((sum, l) => sum + l.stations.length, 0);
+      html += `<tr><td>地铁线路</td><td>${metroData.lines.length} 条 / ${totalStations} 站</td><td>高德地图 API</td></tr>`;
+    }
+    if (spots.length) {
+      const withImg = spots.filter(s => s.image || (s.images && s.images.length)).length;
+      html += `<tr><td>景点</td><td>${spots.length} 个 (${withImg} 有图)</td><td>高德 POI + 维基百科</td></tr>`;
+    }
+    html += `</table>`;
+
+    html += `<h4>数据可信度说明</h4>`;
+    html += `<div class="note-item"><span class="note-icon">⚠️</span>
+      <span class="note-text note-warn"><strong>车次时刻表为算法模拟生成</strong>，非 12306 实时数据。发车间隔和运行时间基于线路类型和距离推算，仅供路线参考，不可用于实际出行决策。购票请以 12306 官方信息为准。</span></div>`;
+    html += `<div class="note-item"><span class="note-icon">ℹ️</span>
+      <span class="note-text">景点门票和游览时长为估算值，实际价格和时间可能因季节、活动等变化，请出行前确认。</span></div>`;
+    html += `<div class="note-item"><span class="note-icon">ℹ️</span>
+      <span class="note-text">最近交通站基于直线距离计算，实际步行/驾车距离可能更长。</span></div>`;
+
+    // Freshness
+    if (DataManager.meta) {
+      html += `<h4>数据更新时间</h4>`;
+      const ds = DataManager.meta.datasets || {};
+      html += `<table><tr><th>数据集</th><th>数量</th><th>更新时间</th></tr>`;
+      for (const [key, val] of Object.entries(ds)) {
+        const date = val.updatedAt ? new Date(val.updatedAt).toLocaleDateString('zh-CN') : '—';
+        html += `<tr><td>${key}</td><td>${val.count || '—'}</td><td>${date}</td></tr>`;
+      }
+      html += `</table>`;
+    }
+
+    html += `</div>`;
+    return html;
   },
 
   showHSRDetail(line) {
@@ -1602,8 +1854,8 @@ const UIController = {
     if (trains.length > 0) {
       const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
       const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
-      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length})</h3>`;
-      html += `<div class="train-data-notice"><span>⚠</span> 模拟数据，非实时时刻表</div>`;
+      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length}) <span class="ref-badge simulated">参考</span></h3>`;
+      html += `<div class="train-data-notice"><span>⚠</span> 模拟时刻表，非实时数据 · 购票请前往 12306</div>`;
       html += `<div class="train-list">`;
       trains.forEach(train => {
         const typeClass = (train.type || 'G').toLowerCase() + '-type';
@@ -1652,7 +1904,7 @@ const UIController = {
     const color = typeColorMap[train.type] || '#E63946';
     const typeLabel = typeLabelMap[train.type] || '高铁';
 
-    let html = `<h2>${train.number}</h2>`;
+    let html = `<h2>${train.number} <span class="ref-badge simulated">参考</span></h2>`;
     html += `<div class="city-meta">${typeLabel} · ${train.route.length}个站点</div>`;
 
     // Calculate total journey time
@@ -1867,11 +2119,11 @@ const UIController = {
     const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
 
     let html = `<h2>${from} → ${to}</h2>`;
-    html += `<div class="city-meta">查询结果</div>`;
+    html += `<div class="city-meta">路线参考 <span class="ref-badge simulated">模拟数据</span></div>`;
 
     // Disclaimer
     html += `<div class="route-disclaimer">
-      <span>⚠</span> 车次数据为算法模拟生成，非 12306 实时数据，仅供路线参考。
+      <span>⚠</span> 以下车次为算法模拟生成，非 12306 实时数据，仅供路线规划参考。实际购票请以 12306 官方信息为准。
     </div>`;
 
     if (!direct.length && !transfer.length) {
