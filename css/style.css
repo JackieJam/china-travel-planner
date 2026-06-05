@@ -356,6 +356,47 @@ body {
   margin-left: 4px;
 }
 
+/* ===== Travel Info (Spot Detail) ===== */
+.travel-info-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.travel-card {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px;
+  background: #f0f4f8;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.travel-icon {
+  font-size: 18px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.travel-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.travel-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.travel-value.free {
+  color: #27ae60;
+}
+
 /* ===== Spot Image in Detail Panel ===== */
 .spot-image {
   max-width: 100%;
@@ -593,6 +634,11 @@ body {
 
 #zoom-level { margin-left: auto; }
 
+.data-freshness {
+  color: rgba(255,255,255,0.4);
+  font-style: italic;
+}
+
 /* ===== Map Markers (CSS overlay) ===== */
 .city-marker {
   width: 12px;
@@ -821,6 +867,285 @@ body {
   background: #f5f5f5;
   border-color: #ddd;
   cursor: default;
+}
+
+/* ===== Route Search Panel ===== */
+.route-search-panel {
+  background: rgba(74,144,217,0.06);
+}
+
+.route-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.route-icon {
+  position: absolute;
+  left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  z-index: 1;
+}
+
+.route-icon.start { background: #27ae60; }
+.route-icon.end { background: #e74c3c; }
+
+.route-input {
+  width: 100%;
+  padding: 7px 10px 7px 32px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.route-input::placeholder { color: var(--text-secondary); }
+.route-input:focus { border-color: var(--accent); }
+
+.route-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #252b3b;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 25;
+  box-shadow: var(--shadow);
+}
+
+.route-suggestions.hidden { display: none; }
+
+.route-suggestion-item {
+  padding: 6px 10px 6px 32px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.route-suggestion-item:hover { background: var(--bg-hover); }
+
+.route-swap-btn {
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin: -2px 0;
+}
+
+.route-swap-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.route-search-btn {
+  padding: 7px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.route-search-btn:hover { background: var(--accent-hover); }
+.route-search-btn:disabled { background: #666; cursor: default; }
+
+/* ===== Route Results ===== */
+.route-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  margin: 12px 0;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: #795548;
+  line-height: 1.5;
+}
+
+.route-empty {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.route-tips {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: #555;
+}
+
+.route-tips ul { margin: 8px 0 0 16px; }
+.route-tips li { margin-bottom: 4px; }
+
+.route-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.route-card {
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.route-card:hover {
+  background: #eef1f5;
+  border-color: #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.route-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.route-card-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 1px 6px;
+  background: #eee;
+  border-radius: 3px;
+}
+
+.route-transfer-arrow {
+  font-size: 16px;
+  color: #999;
+}
+
+.route-card-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.route-card-timeline.compact { font-size: 12px; }
+
+.route-time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 60px;
+}
+
+.route-time-block.arrive { align-items: flex-end; }
+
+.route-time {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.5px;
+}
+
+.route-card-timeline.compact .route-time { font-size: 15px; }
+
+.route-station-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.route-duration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 0 8px;
+}
+
+.route-duration-line {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: #ccc;
+  position: relative;
+}
+
+.route-duration-line::before,
+.route-duration-line::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.route-duration-line::before { left: 0; }
+.route-duration-line::after { right: 0; }
+
+.route-duration-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.route-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #eee;
+}
+
+.transfer-wait-info {
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: #fff3e0;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: #e65100;
+  font-weight: 500;
+}
+
+.train-data-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin: 8px 0;
+  background: #fff8e1;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: #795548;
 }
 
 /* ===== Line Filters ===== */

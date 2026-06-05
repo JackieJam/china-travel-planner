@@ -28,8 +28,26 @@ except ImportError:
     print("请先安装 requests: pip install requests")
     sys.exit(1)
 
+import os
+
 DATA_DIR = Path(__file__).parent.parent / "data"
-AMAP_KEY = "a1433a639b84f333a4b37f17b6388da3"
+
+def _load_amap_key():
+    """从高德 API Key：环境变量 > js/config.js > 报错"""
+    key = os.environ.get("AMAP_KEY")
+    if key:
+        return key
+    config_js = DATA_DIR.parent / "js" / "config.js"
+    if config_js.exists():
+        import re as _re
+        text = config_js.read_text(encoding="utf-8")
+        m = _re.search(r"amapKey:\s*['\"]([^'\"]+)['\"]", text)
+        if m:
+            return m.group(1)
+    print("ERROR: 未找到高德 API Key。请设置环境变量 AMAP_KEY 或在 js/config.js 中配置。")
+    sys.exit(1)
+
+AMAP_KEY = _load_amap_key()
 API_PLACE = "https://restapi.amap.com/v3/place/text"
 API_BUSLINE = "https://restapi.amap.com/v3/bus/linename"
 

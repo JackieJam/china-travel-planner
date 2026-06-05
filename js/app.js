@@ -202,6 +202,27 @@ const DataManager = {
     }
   },
 
+  meta: null,
+
+  async loadMeta() {
+    try {
+      this.meta = await this._fetch('data/meta.json');
+    } catch (e) {
+      this.meta = null;
+    }
+  },
+
+  getDataFreshnessText() {
+    if (!this.meta || !this.meta.updatedAt) return '';
+    const d = new Date(this.meta.updatedAt);
+    const now = new Date();
+    const days = Math.floor((now - d) / 86400000);
+    if (days === 0) return '数据今日更新';
+    if (days < 30) return `数据更新于 ${days} 天前`;
+    const months = Math.floor(days / 30);
+    return `数据更新于 ${months} 个月前`;
+  },
+
   async _fetch(url) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -245,6 +266,193 @@ const DataManager = {
   getTrainByNumber(number) {
     if (!this.trains || !this.trains.length) return null;
     return this.trains.find(t => t.number === number);
+  },
+
+  // ---- Route Query ----
+
+  /**
+   * 查询两城市之间的车次
+   * @param {string} fromCity 出发城市名
+   * @param {string} toCity 到达城市名
+   * @returns {{ direct: Array, transfer: Array }}
+   */
+  queryRoutes(fromCity, toCity) {
+    if (!this.trains || !this.trains.length) return { direct: [], transfer: [] };
+
+    const direct = this._findDirectTrains(fromCity, toCity);
+    const transfer = direct.length < 5
+      ? this._findTransferRoutes(fromCity, toCity, direct)
+      : [];
+
+    return { direct, transfer };
+  },
+
+  /**
+   * 获取一个城市关联的所有高铁站名
+   */
+  getCityStationNames(cityName) {
+    const names = new Set();
+    // From hsr.json: stations whose name starts with city name
+    this.hsr.forEach(line => {
+      line.stations.forEach(s => {
+        if (s.name === cityName || s.name.startsWith(cityName)) {
+          names.add(s.name);
+        }
+      });
+    });
+    return [...names];
+  },
+
+  _findDirectTrains(fromCity, toCity) {
+    const fromStations = this.getCityStationNames(fromCity);
+    const toStations = this.getCityStationNames(toCity);
+    if (!fromStations.length || !toStations.length) return [];
+
+    const results = [];
+    for (const train of this.trains) {
+      const stops = train.route.filter(s => s.arrive || s.depart);
+      let fromIdx = -1, toIdx = -1;
+
+      for (let i = 0; i < stops.length; i++) {
+        const sn = stops[i].station;
+        if (fromIdx === -1 && fromStations.some(fs => sn === fs || sn.startsWith(fs.replace('市', '')))) {
+          fromIdx = i;
+        }
+        if (toStations.some(ts => sn === ts || sn.startsWith(ts.replace('市', '')))) {
+          toIdx = i;
+        }
+      }
+
+      if (fromIdx >= 0 && toIdx > fromIdx) {
+        const fromStop = stops[fromIdx];
+        const toStop = stops[toIdx];
+        const depart = fromStop.depart || fromStop.arrive;
+        const arrive = toStop.arrive || toStop.depart;
+
+        results.push({
+          train: train,
+          fromStation: fromStop.station,
+          toStation: toStop.station,
+          depart,
+          arrive,
+          duration: this._calcDuration(depart, arrive),
+          stops: toIdx - fromIdx,
+        });
+      }
+    }
+
+    // Sort by departure time
+    results.sort((a, b) => (a.depart || '').localeCompare(b.depart || ''));
+    return results;
+  },
+
+  _findTransferRoutes(fromCity, toCity, directResults) {
+    const fromStations = this.getCityStationNames(fromCity);
+    const toStations = this.getCityStationNames(toCity);
+    const directKeys = new Set(directResults.map(r => r.train.number));
+
+    // Build index: station -> trains passing through
+    const stationIndex = {};
+    for (const train of this.trains) {
+      for (const stop of train.route) {
+        if (!stop.arrive && !stop.depart) continue;
+        if (!stationIndex[stop.station]) stationIndex[stop.station] = [];
+        stationIndex[stop.station].push({ train, stop });
+      }
+    }
+
+    const transfers = [];
+
+    for (const train1 of this.trains) {
+      const stops1 = train1.route.filter(s => s.arrive || s.depart);
+      // Find boarding stop at fromCity
+      let boardIdx = -1;
+      for (let i = 0; i < stops1.length; i++) {
+        if (fromStations.some(fs => stops1[i].station === fs || stops1[i].station.startsWith(fs.replace('市', '')))) {
+          boardIdx = i;
+          break;
+        }
+      }
+      if (boardIdx < 0) continue;
+
+      // For each possible transfer station on train1
+      for (let i = boardIdx + 1; i < stops1.length; i++) {
+        const transferStation = stops1[i].station;
+        // Skip if transfer station is already at toCity
+        if (toStations.some(ts => transferStation === ts || transferStation.startsWith(ts.replace('市', '')))) continue;
+
+        const transfersHere = stationIndex[transferStation];
+        if (!transfersHere) continue;
+
+        for (const { train: train2, stop: t2stop } of transfersHere) {
+          if (train2.number === train1.number) continue;
+          if (directKeys.has(train2.number)) continue;
+
+          const stops2 = train2.route.filter(s => s.arrive || s.depart);
+          const transferIdx2 = stops2.findIndex(s => s.station === transferStation);
+          if (transferIdx2 < 0) continue;
+
+          // Find arrival at toCity on train2
+          let arriveIdx = -1;
+          for (let j = transferIdx2 + 1; j < stops2.length; j++) {
+            if (toStations.some(ts => stops2[j].station === ts || stops2[j].station.startsWith(ts.replace('市', '')))) {
+              arriveIdx = j;
+              break;
+            }
+          }
+          if (arriveIdx < 0) continue;
+
+          const depart1 = stops1[boardIdx].depart || stops1[boardIdx].arrive;
+          const arrive1 = stops1[i].arrive || stops1[i].depart;
+          const depart2 = t2stop.depart || t2stop.arrive;
+          const arrive2 = stops2[arriveIdx].arrive || stops2[arriveIdx].depart;
+
+          // Transfer wait time (must be positive, i.e. train2 departs after train1 arrives)
+          const waitMin = this._calcDuration(arrive1, depart2);
+          if (waitMin < 20 || waitMin > 300) continue; // 20min ~ 5hr transfer window
+
+          const leg1 = this._calcDuration(depart1, arrive1);
+          const leg2 = this._calcDuration(depart2, arrive2);
+
+          transfers.push({
+            train1, train2,
+            fromStation: stops1[boardIdx].station,
+            transferStation,
+            toStation: stops2[arriveIdx].station,
+            depart: depart1,
+            arrive: arrive2,
+            arrive1, depart2,
+            duration: leg1 + waitMin + leg2,
+            waitMin,
+            leg1, leg2,
+          });
+
+          if (transfers.length >= 10) break;
+        }
+        if (transfers.length >= 10) break;
+      }
+      if (transfers.length >= 10) break;
+    }
+
+    // Sort by total duration
+    transfers.sort((a, b) => a.duration - b.duration);
+    return transfers.slice(0, 5);
+  },
+
+  _calcDuration(fromTime, toTime) {
+    if (!fromTime || !toTime) return 0;
+    const [h1, m1] = fromTime.split(':').map(Number);
+    const [h2, m2] = toTime.split(':').map(Number);
+    let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if (diff < 0) diff += 24 * 60; // handle overnight
+    return diff;
+  },
+
+  _formatDuration(minutes) {
+    if (minutes <= 0) return '--';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h${m > 0 ? m + 'min' : ''}` : `${m}min`;
   },
 };
 
@@ -1101,6 +1309,94 @@ const UIController = {
       LayerManager._clearTrainHighlight();
       UIController.hideDetail();
     });
+
+    // 路线查询
+    this._bindRouteSearch();
+  },
+
+  _bindRouteSearch() {
+    const fromInput = document.getElementById('route-from');
+    const toInput = document.getElementById('route-to');
+    const fromSuggestions = document.getElementById('route-from-suggestions');
+    const toSuggestions = document.getElementById('route-to-suggestions');
+    const swapBtn = document.getElementById('route-swap');
+    const searchBtn = document.getElementById('route-search-btn');
+
+    if (!fromInput || !toInput) return;
+
+    // Autocomplete
+    const bindAutocomplete = (input, suggestionsEl) => {
+      input.addEventListener('input', () => {
+        const results = DataManager.searchCities(input.value);
+        if (!results.length) { suggestionsEl.classList.add('hidden'); return; }
+        suggestionsEl.innerHTML = results.map(c =>
+          `<div class="route-suggestion-item" data-city="${c.name}">${c.name}<span style="color:#8892a4;font-size:11px;margin-left:4px">${c.province || ''}</span></div>`
+        ).join('');
+        suggestionsEl.classList.remove('hidden');
+        suggestionsEl.querySelectorAll('.route-suggestion-item').forEach(item => {
+          item.addEventListener('click', () => {
+            input.value = item.dataset.city;
+            suggestionsEl.classList.add('hidden');
+          });
+        });
+      });
+
+      input.addEventListener('focus', () => {
+        if (input.value) input.dispatchEvent(new Event('input'));
+      });
+    };
+
+    bindAutocomplete(fromInput, fromSuggestions);
+    bindAutocomplete(toInput, toSuggestions);
+
+    // Close suggestions on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.route-input-group')) {
+        fromSuggestions.classList.add('hidden');
+        toSuggestions.classList.add('hidden');
+      }
+    });
+
+    // Swap
+    swapBtn.addEventListener('click', () => {
+      const tmp = fromInput.value;
+      fromInput.value = toInput.value;
+      toInput.value = tmp;
+    });
+
+    // Search
+    const doSearch = async () => {
+      const from = fromInput.value.trim();
+      const to = toInput.value.trim();
+      if (!from || !to) return;
+      if (from === to) {
+        this.showRouteError('出发城市和到达城市不能相同');
+        return;
+      }
+
+      searchBtn.disabled = true;
+      searchBtn.textContent = '查询中…';
+
+      // Ensure trains are loaded
+      if (!DataManager._trainsLoaded) {
+        await DataManager.loadTrains();
+      }
+
+      const result = DataManager.queryRoutes(from, to);
+      this.showRouteResults(from, to, result);
+
+      searchBtn.disabled = false;
+      searchBtn.textContent = '查询车次';
+    };
+
+    searchBtn.addEventListener('click', doSearch);
+
+    // Enter key triggers search
+    [fromInput, toInput].forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doSearch();
+      });
+    });
   },
 
   renderSidebar() {
@@ -1307,6 +1603,7 @@ const UIController = {
       const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
       const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
       html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length})</h3>`;
+      html += `<div class="train-data-notice"><span>⚠</span> 模拟数据，非实时时刻表</div>`;
       html += `<div class="train-list">`;
       trains.forEach(train => {
         const typeClass = (train.type || 'G').toLowerCase() + '-type';
@@ -1478,6 +1775,44 @@ const UIController = {
     html += `<h2>${spot.name}</h2>`;
     html += `<div class="city-meta">${spot.city} · ${spot.category || '景点'}</div>`;
 
+    // Travel info cards
+    const travelCards = [];
+    if (spot.visitDuration) {
+      const [min, max] = spot.visitDuration;
+      const durText = min === max
+        ? (min >= 60 ? `${Math.floor(min/60)}h${min%60 ? min%60 + 'min' : ''}` : `${min}min`)
+        : (min >= 60 ? `${Math.floor(min/60)}~${Math.floor(max/60)}h` : `${min}~${max}min`);
+      travelCards.push(`<div class="travel-card">
+        <span class="travel-icon">⏱</span>
+        <div class="travel-label">建议游览</div>
+        <div class="travel-value">${durText}</div>
+      </div>`);
+    }
+    if (spot.ticketPrice) {
+      const [lo, hi] = spot.ticketPrice;
+      const priceText = lo === 0 && hi === 0 ? '免费'
+        : lo === hi ? `¥${lo}`
+        : `¥${lo}~${hi}`;
+      travelCards.push(`<div class="travel-card">
+        <span class="travel-icon">🎫</span>
+        <div class="travel-label">门票参考</div>
+        <div class="travel-value ${lo === 0 && hi === 0 ? 'free' : ''}">${priceText}</div>
+      </div>`);
+    }
+    if (spot.nearestStation) {
+      const ns = spot.nearestStation;
+      const typeIcon = ns.type === 'metro' ? '🚇' : '🚄';
+      const distText = ns.distance < 1 ? `${Math.round(ns.distance * 1000)}m` : `${ns.distance}km`;
+      travelCards.push(`<div class="travel-card">
+        <span class="travel-icon">${typeIcon}</span>
+        <div class="travel-label">最近站点</div>
+        <div class="travel-value">${ns.name} · ${distText}</div>
+      </div>`);
+    }
+    if (travelCards.length) {
+      html += `<div class="travel-info-row">${travelCards.join('')}</div>`;
+    }
+
     if (spot.description) {
       html += `<div class="section"><p class="spot-description">${spot.description}</p></div>`;
     }
@@ -1502,18 +1837,214 @@ const UIController = {
     const modeLabel = isClean ? '纯净模式' : '标准模式';
     this.elements.statusText.textContent = `地图: ${modeLabel}`;
   },
+
+  showDataFreshness() {
+    const el = document.getElementById('data-freshness');
+    if (!el) return;
+    const text = DataManager.getDataFreshnessText();
+    if (text) {
+      el.textContent = text;
+      // Tooltip with detailed timestamps
+      if (DataManager.meta && DataManager.meta.datasets) {
+        const details = Object.entries(DataManager.meta.datasets)
+          .map(([k, v]) => `${k}: ${v.count || '?'} 条 (${v.updatedAt ? new Date(v.updatedAt).toLocaleDateString('zh-CN') : '?'})`)
+          .join('\n');
+        el.title = details;
+      }
+    }
+  },
+
+  // ---- Route Results ----
+
+  showRouteError(msg) {
+    this.elements.detailContent.innerHTML = `<h2>路线查询</h2><p style="color:#e74c3c;margin-top:12px">${msg}</p>`;
+    this.elements.detailPanel.classList.remove('hidden');
+  },
+
+  showRouteResults(from, to, result) {
+    const { direct, transfer } = result;
+    const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
+    const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
+
+    let html = `<h2>${from} → ${to}</h2>`;
+    html += `<div class="city-meta">查询结果</div>`;
+
+    // Disclaimer
+    html += `<div class="route-disclaimer">
+      <span>⚠</span> 车次数据为算法模拟生成，非 12306 实时数据，仅供路线参考。
+    </div>`;
+
+    if (!direct.length && !transfer.length) {
+      html += `<div class="route-empty">未找到直达或换乘方案</div>`;
+      // Suggest checking via nearby hub cities
+      html += `<div class="route-tips">
+        <p>建议尝试：</p>
+        <ul>
+          <li>使用更短的城市名（如"北京"而非"北京市"）</li>
+          <li>检查两城市是否均有高铁站</li>
+          <li>尝试通过中间枢纽城市换乘</li>
+        </ul>
+      </div>`;
+    }
+
+    // Direct trains
+    if (direct.length) {
+      html += `<div class="section">
+        <h3><span class="dot" style="background:#27ae60"></span>直达车次 (${direct.length})</h3>`;
+      html += `<div class="route-results-list">`;
+      direct.forEach(r => {
+        const color = typeColorMap[r.train.type] || '#E63946';
+        const label = typeLabelMap[r.train.type] || '高铁';
+        html += `<div class="route-card" data-train="${r.train.number}">
+          <div class="route-card-header">
+            <span class="train-number ${(r.train.type||'G').toLowerCase()}-type">${r.train.number}</span>
+            <span class="route-card-type">${label}</span>
+          </div>
+          <div class="route-card-timeline">
+            <div class="route-time-block">
+              <span class="route-time">${r.depart || '--:--'}</span>
+              <span class="route-station-name">${r.fromStation}</span>
+            </div>
+            <div class="route-duration">
+              <span class="route-duration-line"></span>
+              <span class="route-duration-text">${DataManager._formatDuration(r.duration)}</span>
+            </div>
+            <div class="route-time-block arrive">
+              <span class="route-time">${r.arrive || '--:--'}</span>
+              <span class="route-station-name">${r.toStation}</span>
+            </div>
+          </div>
+          <div class="route-card-meta">${r.stops}站 · ${r.train.name}</div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // Transfer routes
+    if (transfer.length) {
+      html += `<div class="section">
+        <h3><span class="dot" style="background:#f39c12"></span>换乘方案 (${transfer.length})</h3>`;
+      html += `<div class="route-results-list">`;
+      transfer.forEach((r, idx) => {
+        html += `<div class="route-card transfer-card" data-transfer="${idx}">
+          <div class="route-card-header">
+            <span class="train-number ${(r.train1.type||'G').toLowerCase()}-type">${r.train1.number}</span>
+            <span class="route-transfer-arrow">→</span>
+            <span class="train-number ${(r.train2.type||'G').toLowerCase()}-type">${r.train2.number}</span>
+          </div>
+          <div class="route-card-timeline compact">
+            <div class="route-time-block">
+              <span class="route-time">${r.depart || '--:--'}</span>
+              <span class="route-station-name">${r.fromStation}</span>
+            </div>
+            <div class="route-duration">
+              <span class="route-duration-line"></span>
+              <span class="route-duration-text">${DataManager._formatDuration(r.duration)}</span>
+            </div>
+            <div class="route-time-block arrive">
+              <span class="route-time">${r.arrive || '--:--'}</span>
+              <span class="route-station-name">${r.toStation}</span>
+            </div>
+          </div>
+          <div class="route-card-meta">
+            换乘站: ${r.transferStation} · 等待 ${DataManager._formatDuration(r.waitMin)}
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    this.elements.detailContent.innerHTML = html;
+    this.elements.detailPanel.classList.remove('hidden');
+
+    // Click handlers for direct train cards
+    this.elements.detailContent.querySelectorAll('.route-card[data-train]').forEach(card => {
+      card.addEventListener('click', () => {
+        const trainNumber = card.dataset.train;
+        LayerManager.highlightTrain(trainNumber);
+        const train = DataManager.getTrainByNumber(trainNumber);
+        if (train) this.showTrainDetail(train);
+      });
+    });
+
+    // Click handlers for transfer cards: show detail
+    this.elements.detailContent.querySelectorAll('.transfer-card[data-transfer]').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.transfer);
+        const r = transfer[idx];
+        this.showTransferDetail(r, from, to);
+      });
+    });
+  },
+
+  showTransferDetail(r, fromCity, toCity) {
+    const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
+    let html = `<h2>${fromCity} → ${toCity} 换乘方案</h2>`;
+    html += `<div class="city-meta">经 ${r.transferStation} 换乘</div>`;
+
+    // Leg 1
+    html += `<div class="section">
+      <h3><span class="dot" style="background:${typeColorMap[r.train1.type] || '#E63946'}"></span>第一段: ${r.train1.number}</h3>
+      <div class="line-item" style="border-left-color:${typeColorMap[r.train1.type] || '#E63946'}">
+        <div class="line-name">${r.fromStation} ${r.depart || '--:--'} → ${r.transferStation} ${r.arrive1 || '--:--'}</div>
+        <div class="line-desc">${DataManager._formatDuration(r.leg1)}</div>
+      </div>
+    </div>`;
+
+    // Transfer wait
+    html += `<div class="transfer-wait-info">
+      换乘等待: ${DataManager._formatDuration(r.waitMin)}（${r.transferStation}）
+    </div>`;
+
+    // Leg 2
+    html += `<div class="section">
+      <h3><span class="dot" style="background:${typeColorMap[r.train2.type] || '#E63946'}"></span>第二段: ${r.train2.number}</h3>
+      <div class="line-item" style="border-left-color:${typeColorMap[r.train2.type] || '#E63946'}">
+        <div class="line-name">${r.transferStation} ${r.depart2 || '--:--'} → ${r.toStation} ${r.arrive || '--:--'}</div>
+        <div class="line-desc">${DataManager._formatDuration(r.leg2)}</div>
+      </div>
+    </div>`;
+
+    html += `<div class="train-journey-time" style="margin-top:12px">全程: ${DataManager._formatDuration(r.duration)}</div>`;
+
+    // Buttons to view each train's full route
+    html += `<div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-back-national" onclick="LayerManager.highlightTrain('${r.train1.number}'); UIController.showTrainDetail(DataManager.getTrainByNumber('${r.train1.number}'))">查看 ${r.train1.number}</button>
+      <button class="btn-back-national" onclick="LayerManager.highlightTrain('${r.train2.number}'); UIController.showTrainDetail(DataManager.getTrainByNumber('${r.train2.number}'))">查看 ${r.train2.number}</button>
+    </div>`;
+
+    this.elements.detailContent.innerHTML = html;
+  },
 };
 
 // ==================== Bootstrap ====================
 (async function main() {
-  // 初始化 UI
+  // 初始化 UI（不依赖 AMap）
   UIController.init();
+
+  // 等待高德 API 就绪
+  if (typeof AMap === 'undefined') {
+    await new Promise(resolve => {
+      window.addEventListener('amap-ready', resolve, { once: true });
+      // 超时 15 秒后仍然继续（让用户看到错误提示）
+      setTimeout(resolve, 15000);
+    });
+  }
+
+  if (typeof AMap === 'undefined') {
+    UIController.setStatus('高德地图 API 未就绪，请检查 Key 配置');
+    return;
+  }
 
   // 初始化地图
   MapManager.init('map-container');
 
   // 加载数据
   await DataManager.loadAll();
+
+  // 加载数据新鲜度信息
+  await DataManager.loadMeta();
+  UIController.showDataFreshness();
 
   // 渲染侧边栏
   UIController.renderSidebar();

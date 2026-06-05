@@ -6,3 +6,4 @@ __pycache__/
 .vscode/
 .idea/
 data/spots_backup.json
+js/config.js

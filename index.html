@@ -5,8 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>全国交通旅游地图</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- 高德地图 JS API 2.0 —— 请将 YOUR_AMAP_KEY 替换为你自己的高德 Web 服务 Key -->
-  <script src="https://webapi.amap.com/maps?v=2.0&key=a1433a639b84f333a4b37f17b6388da3&plugin=AMap.PlaceSearch,AMap.AutoComplete"></script>
+  <!-- 配置（API Key 等） -->
+  <script src="js/config.js"></script>
+  <!-- 高德地图 JS API 2.0（key 从 config.js 读取） -->
+  <script>
+    (function() {
+      var key = (window.APP_CONFIG && window.APP_CONFIG.amapKey) || '';
+      if (!key || key === 'YOUR_AMAP_KEY_HERE') {
+        document.addEventListener('DOMContentLoaded', function() {
+          var el = document.getElementById('status-text');
+          if (el) el.textContent = '缺少高德 API Key，请在 js/config.js 中配置';
+        });
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = 'https://webapi.amap.com/maps?v=2.0&key=' + key + '&plugin=AMap.PlaceSearch,AMap.AutoComplete';
+      s.onload = function() { window.dispatchEvent(new Event('amap-ready')); };
+      s.onerror = function() {
+        document.addEventListener('DOMContentLoaded', function() {
+          var el = document.getElementById('status-text');
+          if (el) el.textContent = '高德地图 API 加载失败，请检查网络或 Key';
+        });
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
   <div id="app">
@@ -28,6 +51,25 @@
         <h1>交通旅游地图</h1>
         <span class="subtitle">高铁 · 地铁 · 景点</span>
       </header>
+
+      <!-- 路线查询 -->
+      <section class="panel route-search-panel">
+        <h2 class="panel-title">路线查询</h2>
+        <div class="route-search-form">
+          <div class="route-input-group">
+            <span class="route-icon start">出</span>
+            <input type="text" id="route-from" class="route-input" placeholder="出发城市" autocomplete="off">
+            <div id="route-from-suggestions" class="route-suggestions hidden"></div>
+          </div>
+          <button id="route-swap" class="route-swap-btn" title="交换起终点">⇅</button>
+          <div class="route-input-group">
+            <span class="route-icon end">到</span>
+            <input type="text" id="route-to" class="route-input" placeholder="到达城市" autocomplete="off">
+            <div id="route-to-suggestions" class="route-suggestions hidden"></div>
+          </div>
+          <button id="route-search-btn" class="route-search-btn">查询车次</button>
+        </div>
+      </section>
 
       <!-- 图层开关 -->
       <section class="panel">
@@ -112,6 +154,7 @@
     <!-- 底部状态栏 -->
     <footer id="status-bar" class="status-bar">
       <span id="status-text">就绪</span>
+      <span id="data-freshness" class="data-freshness"></span>
       <span id="zoom-level">缩放: -</span>
     </footer>
   </div>
