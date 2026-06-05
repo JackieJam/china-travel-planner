@@ -2632,16 +2632,19 @@ const UIController = {
   UIController.init();
 
   // 等待高德 API 就绪
-  if (typeof AMap === 'undefined') {
+  if (typeof AMap === 'undefined' && !window.AMAP_BOOT_ERROR) {
     await new Promise(resolve => {
       window.addEventListener('amap-ready', resolve, { once: true });
+      window.addEventListener('amap-error', resolve, { once: true });
       // 超时 15 秒后仍然继续（让用户看到错误提示）
       setTimeout(resolve, 15000);
     });
   }
 
   if (typeof AMap === 'undefined') {
-    UIController.setStatus('高德地图 API 未就绪，请检查 Key 配置');
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    UIController.setStatus(window.AMAP_BOOT_ERROR || '高德地图 API 未就绪，请检查 Key 配置');
     return;
   }
 

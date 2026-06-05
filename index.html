@@ -6,26 +6,29 @@
   <title>全国交通旅游地图</title>
   <link rel="stylesheet" href="css/style.css">
   <!-- 配置（API Key 等） -->
-  <script src="js/config.js"></script>
+  <script src="js/config.js?v=20260605-1"></script>
   <!-- 高德地图 JS API 2.0（key 从 config.js 读取） -->
   <script>
     (function() {
-      var key = (window.APP_CONFIG && window.APP_CONFIG.amapKey) || '';
-      if (!key || key === 'YOUR_AMAP_KEY_HERE') {
+      function fail(message) {
+        window.AMAP_BOOT_ERROR = message;
+        window.dispatchEvent(new CustomEvent('amap-error', { detail: { message: message } }));
         document.addEventListener('DOMContentLoaded', function() {
           var el = document.getElementById('status-text');
-          if (el) el.textContent = '缺少高德 API Key，请在 js/config.js 中配置';
+          if (el) el.textContent = message;
         });
+      }
+
+      var key = (window.APP_CONFIG && window.APP_CONFIG.amapKey) || '';
+      if (!key || key === 'YOUR_AMAP_KEY_HERE') {
+        fail('缺少高德 API Key，请在 js/config.js 中配置');
         return;
       }
       var s = document.createElement('script');
       s.src = 'https://webapi.amap.com/maps?v=2.0&key=' + key + '&plugin=AMap.PlaceSearch,AMap.AutoComplete';
       s.onload = function() { window.dispatchEvent(new Event('amap-ready')); };
       s.onerror = function() {
-        document.addEventListener('DOMContentLoaded', function() {
-          var el = document.getElementById('status-text');
-          if (el) el.textContent = '高德地图 API 加载失败，请检查网络或 Key';
-        });
+        fail('高德地图 API 加载失败，请检查网络或 Key');
       };
       document.head.appendChild(s);
     })();
