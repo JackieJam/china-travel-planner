@@ -462,6 +462,12 @@ body {
   border-color: #fff176;
 }
 
+.ref-badge.real {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+
 /* ===== Overview Cards ===== */
 .overview-grid {
   display: grid;

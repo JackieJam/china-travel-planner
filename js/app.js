@@ -223,6 +223,25 @@ const DataManager = {
     return `数据更新于 ${months} 个月前`;
   },
 
+  isTrainDataReal() {
+    const src = this.meta && this.meta.datasets &&
+                this.meta.datasets.trains && this.meta.datasets.trains.source;
+    return src && src.includes('12306');
+  },
+
+  trainBadge() {
+    return this.isTrainDataReal()
+      ? '<span class="ref-badge real">12306</span>'
+      : '<span class="ref-badge simulated">参考</span>';
+  },
+
+  trainNotice() {
+    if (this.isTrainDataReal()) {
+      return '<div class="train-data-notice"><span>ℹ</span> 车次来自 12306 实时查询，中间站时刻为距离插值 · 购票请前往 12306</div>';
+    }
+    return '<div class="train-data-notice"><span>⚠</span> 模拟时刻表，非实时数据 · 购票请前往 12306</div>';
+  },
+
   async _fetch(url) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -1562,7 +1581,7 @@ const UIController = {
         <h3><span class="dot" style="background:var(--hsr-color)"></span>高铁线路 (${hsrLines.length}条经过)</h3>`;
       hsrLines.forEach(line => {
         html += `<div class="line-item" style="border-left-color:${line.color}">
-          <div class="line-name">${line.name} <span class="ref-badge simulated">参考</span></div>
+          <div class="line-name">${line.name} ${DataManager.trainBadge()}</div>
           <div class="line-desc">${line.stations.map(s => s.name).join(' → ')}</div>
         </div>`;
       });
@@ -1795,8 +1814,13 @@ const UIController = {
     html += `</table>`;
 
     html += `<h4>数据可信度说明</h4>`;
-    html += `<div class="note-item"><span class="note-icon">⚠️</span>
+    if (DataManager.isTrainDataReal()) {
+      html += `<div class="note-item"><span class="note-icon">ℹ️</span>
+      <span class="note-text"><strong>车次数据来自 12306 实时接口查询</strong>，中间站时刻基于 Haversine 距离比例插值，仅供参考。实际购票请以 12306 官方信息为准。</span></div>`;
+    } else {
+      html += `<div class="note-item"><span class="note-icon">⚠️</span>
       <span class="note-text note-warn"><strong>车次时刻表为算法模拟生成</strong>，非 12306 实时数据。发车间隔和运行时间基于线路类型和距离推算，仅供路线参考，不可用于实际出行决策。购票请以 12306 官方信息为准。</span></div>`;
+    }
     html += `<div class="note-item"><span class="note-icon">ℹ️</span>
       <span class="note-text">景点门票和游览时长为估算值，实际价格和时间可能因季节、活动等变化，请出行前确认。</span></div>`;
     html += `<div class="note-item"><span class="note-icon">ℹ️</span>
@@ -1854,8 +1878,8 @@ const UIController = {
     if (trains.length > 0) {
       const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
       const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
-      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length}) <span class="ref-badge simulated">参考</span></h3>`;
-      html += `<div class="train-data-notice"><span>⚠</span> 模拟时刻表，非实时数据 · 购票请前往 12306</div>`;
+      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length}) ${DataManager.trainBadge()}</h3>`;
+      html += DataManager.trainNotice();
       html += `<div class="train-list">`;
       trains.forEach(train => {
         const typeClass = (train.type || 'G').toLowerCase() + '-type';
@@ -1904,7 +1928,7 @@ const UIController = {
     const color = typeColorMap[train.type] || '#E63946';
     const typeLabel = typeLabelMap[train.type] || '高铁';
 
-    let html = `<h2>${train.number} <span class="ref-badge simulated">参考</span></h2>`;
+    let html = `<h2>${train.number} ${DataManager.trainBadge()}</h2>`;
     html += `<div class="city-meta">${typeLabel} · ${train.route.length}个站点</div>`;
 
     // Calculate total journey time
@@ -2119,12 +2143,18 @@ const UIController = {
     const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
 
     let html = `<h2>${from} → ${to}</h2>`;
-    html += `<div class="city-meta">路线参考 <span class="ref-badge simulated">模拟数据</span></div>`;
+    html += `<div class="city-meta">路线查询 ${DataManager.trainBadge()}</div>`;
 
     // Disclaimer
-    html += `<div class="route-disclaimer">
-      <span>⚠</span> 以下车次为算法模拟生成，非 12306 实时数据，仅供路线规划参考。实际购票请以 12306 官方信息为准。
-    </div>`;
+    if (DataManager.isTrainDataReal()) {
+      html += `<div class="route-disclaimer">
+        <span>ℹ</span> 车次来自 12306 实时查询，中间站时刻为距离插值，仅供路线规划参考。实际购票请以 12306 官方信息为准。
+      </div>`;
+    } else {
+      html += `<div class="route-disclaimer">
+        <span>⚠</span> 以下车次为算法模拟生成，非 12306 实时数据，仅供路线规划参考。实际购票请以 12306 官方信息为准。
+      </div>`;
+    }
 
     if (!direct.length && !transfer.length) {
       html += `<div class="route-empty">未找到直达或换乘方案</div>`;
