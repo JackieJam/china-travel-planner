@@ -225,6 +225,7 @@ const DataManager = {
 
       // 车次数据懒加载：首次访问站点时按需拉取
       this._trainsLoaded = false;
+      this._trainsLoadingPromise = null;
     } catch (err) {
       console.error('数据加载失败:', err);
       UIController.setStatus('数据加载失败，请检查 JSON 文件');
@@ -233,16 +234,29 @@ const DataManager = {
   },
 
   async loadTrains() {
-    if (this._trainsLoaded) return;
-    this._trainsLoaded = true;
+    if (this._trainsLoaded) return true;
+    if (this._trainsLoadingPromise) return this._trainsLoadingPromise;
+
     UIController.setStatus('加载车次数据…');
-    try {
-      this.trains = await this._fetch('data/trains.json');
-      UIController.setStatus(`车次加载完成: ${this.trains.length} 条`);
-    } catch (e) {
-      console.warn('车次数据加载失败（可忽略）:', e);
-      this.trains = [];
-    }
+    this._trainsLoadingPromise = (async () => {
+      try {
+        const trains = await this._fetch('data/trains.json');
+        this.trains = Array.isArray(trains) ? trains : [];
+        this._trainsLoaded = true;
+        UIController.setStatus(`车次加载完成: ${this.trains.length} 条`);
+        return true;
+      } catch (e) {
+        console.warn('车次数据加载失败（可忽略）:', e);
+        this.trains = [];
+        this._trainsLoaded = false;
+        UIController.setStatus('车次数据加载失败，请稍后重试');
+        return false;
+      } finally {
+        this._trainsLoadingPromise = null;
+      }
+    })();
+
+    return this._trainsLoadingPromise;
   },
 
   meta: null,
@@ -1555,7 +1569,13 @@ const UIController = {
 
       // Ensure trains are loaded
       if (!DataManager._trainsLoaded) {
-        await DataManager.loadTrains();
+        const loaded = await DataManager.loadTrains();
+        if (!loaded) {
+          this.showRouteError('车次数据加载失败，请刷新页面后重试');
+          searchBtn.disabled = false;
+          searchBtn.textContent = '路线参考';
+          return;
+        }
       }
 
       const result = DataManager.queryRoutes(from, to);
