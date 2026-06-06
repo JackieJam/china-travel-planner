@@ -345,6 +345,56 @@ body {
 .line-item .line-name { font-weight: 600; }
 .line-item .line-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
+.line-type-tag {
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: rgba(230,57,70,0.1);
+  color: #E63946;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* 高铁站热门方向 */
+.dest-group {
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.dest-group:hover { background: #eef1f5; }
+.dest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dest-name { font-weight: 600; font-size: 14px; color: var(--text-dark); }
+.dest-count { font-size: 12px; color: var(--text-muted); }
+.dest-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* 折叠组件 */
+.collapsible {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.collapsible:hover { color: var(--accent); }
+.collapse-arrow {
+  font-size: 12px;
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
 .detail-back-link {
   display: inline-flex;
   align-items: center;
@@ -381,6 +431,36 @@ body {
 .spot-card:hover { background: #eef1f5; }
 .spot-card .spot-name { font-size: 14px; font-weight: 600; color: var(--text-dark); }
 .spot-card .spot-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* 地铁站详情中的景点卡片 */
+.spot-card .spot-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.spot-card .spot-icon { font-size: 16px; flex-shrink: 0; }
+.spot-card .spot-category-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(46,204,113,0.12);
+  color: var(--spots-color);
+  margin-left: auto;
+}
+.spot-card .spot-card-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.data-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 8px 0;
+}
 
 .spot-tag {
   display: inline-block;

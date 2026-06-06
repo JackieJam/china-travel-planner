@@ -377,6 +377,29 @@ const DataManager = {
     );
   },
 
+  // 反向索引：根据站点名查找附近景点
+  getSpotsNearStation(stationName, cityName) {
+    return this.spots.filter(s => {
+      if (cityName && s.city !== cityName) return false;
+      const ns = s.nearestStation;
+      return ns && ns.name === stationName;
+    }).sort((a, b) => (a.nearestStation?.distance || 999) - (b.nearestStation?.distance || 999));
+  },
+
+  // 查找地铁站附近一定范围内的景点（按距离）
+  getSpotsAroundStation(stationName, cityName, radiusKm = 2) {
+    const station = this.getMetroStation(cityName, stationName);
+    if (!station) return [];
+    return this.spots.filter(s => {
+      if (s.city !== cityName) return false;
+      const d = this._haversineKm(station.center, s.center);
+      return d <= radiusKm;
+    }).map(s => ({
+      ...s,
+      _distanceKm: this._haversineKm(station.center, s.center),
+    })).sort((a, b) => a._distanceKm - b._distanceKm);
+  },
+
   getCitySpots(cityName) {
     return this.spots.filter(s => s.city === cityName);
   },
@@ -583,6 +606,17 @@ const DataManager = {
     const m = minutes % 60;
     return h > 0 ? `${h}h${m > 0 ? m + 'min' : ''}` : `${m}min`;
   },
+
+  // Haversine 距离（km），输入 [lng, lat] 数组
+  _haversineKm(c1, c2) {
+    const R = 6371;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(c2[1] - c1[1]);
+    const dLng = toRad(c2[0] - c1[0]);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(c1[1])) * Math.cos(toRad(c2[1])) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  },
 };
 
 // ==================== Layer Manager ====================
@@ -682,6 +716,7 @@ const LayerManager = {
     metroLineLabels: [],
     metroStations: [],
     spotMarkers: [],
+    spotConnectors: [],
     cityMarkers: [],
     stationLabels: [],
   },
@@ -724,6 +759,7 @@ const LayerManager = {
         this._renderSpotsLayer(this.selectedCity);
       }
       this._setOverlaysVisible(this.overlays.spotMarkers, show);
+      this._setOverlaysVisible(this.overlays.spotConnectors, show);
     }
   },
 
@@ -828,6 +864,7 @@ const LayerManager = {
     this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
+    this._clearOverlays(this.overlays.spotConnectors);
     // Remove metro-contributed station labels
     if (this._metroLabelStart !== undefined) {
       const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
@@ -855,6 +892,7 @@ const LayerManager = {
     this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
+    this._clearOverlays(this.overlays.spotConnectors);
     // Remove metro-contributed station labels
     if (this._metroLabelStart !== undefined) {
       const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
@@ -1261,6 +1299,7 @@ const LayerManager = {
   // ---- Spots Layer ----
   _renderSpotsLayer(cityName) {
     this._clearOverlays(this.overlays.spotMarkers);
+    this._clearOverlays(this.overlays.spotConnectors);
 
     const spots = DataManager.getCitySpots(cityName);
     const map = MapManager.map;
@@ -1273,9 +1312,11 @@ const LayerManager = {
         zIndex: 90,
       });
 
-      // 景点名标注
+      // 景点名标注（含最近地铁站信息）
+      const ns = spot.nearestStation;
+      const stationHint = ns ? ` · ${ns.name}${ns.type === 'metro' ? '🚇' : '🚄'}` : '';
       const label = new AMap.Text({
-        text: spot.name,
+        text: spot.name + stationHint,
         position: spot.center,
         offset: new AMap.Pixel(8, -5),
         style: {
@@ -1292,6 +1333,45 @@ const LayerManager = {
       marker.on('click', () => {
         UIController.showSpotDetail(spot);
       });
+
+      // 景点到最近地铁站的连接线
+      if (ns && ns.type === 'metro') {
+        const station = DataManager.getMetroStation(cityName, ns.name);
+        if (station) {
+          const distText = ns.distance < 1 ? `${Math.round(ns.distance * 1000)}m` : `${ns.distance}km`;
+          const connector = new AMap.Polyline({
+            path: [spot.center, station.center],
+            strokeColor: '#27ae60',
+            strokeWeight: 1.5,
+            strokeOpacity: 0.6,
+            strokeStyle: 'dashed',
+            strokeDasharray: [6, 4],
+            zIndex: 80,
+          });
+          // 距离标注（线段中点）
+          const mid = [
+            (spot.center[0] + station.center[0]) / 2,
+            (spot.center[1] + station.center[1]) / 2,
+          ];
+          const distLabel = new AMap.Text({
+            text: `🚶${distText}`,
+            position: mid,
+            offset: new AMap.Pixel(-12, -8),
+            style: {
+              'font-size': '9px',
+              'color': '#27ae60',
+              'background-color': 'rgba(255,255,255,0.8)',
+              'border': 'none',
+              'padding': '0 3px',
+              'border-radius': '2px',
+            },
+            zIndex: 81,
+          });
+
+          map.add([connector, distLabel]);
+          this.overlays.spotConnectors.push(connector, distLabel);
+        }
+      }
 
       map.add([marker, label]);
       this.overlays.spotMarkers.push(marker, label);
@@ -2131,31 +2211,122 @@ const UIController = {
 
   showStationDetail(station, lines, options = {}) {
     let html = `<h2>${station.name}</h2>`;
-    html += `<div class="city-meta">高铁站</div>`;
-    html += `<div class="section"><h3><span class="dot" style="background:var(--hsr-color)"></span>经过线路</h3>`;
+
+    // 判断所属城市（用于地铁接驳查询）
+    const cityName = DataManager.cities.find(c =>
+      station.name.startsWith(c.name) || station.name === c.name
+    )?.name;
+
+    html += `<div class="city-meta">高铁站${cityName ? ' · ' + cityName : ''}</div>`;
+
+    // 经过线路
+    html += `<div class="section"><h3><span class="dot" style="background:var(--hsr-color)"></span>经过线路 (${lines.length})</h3>`;
     lines.forEach(line => {
       html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-hsr-line="${line.name}">
-        <div class="line-name">${line.name}</div>
-        <div class="line-desc">${line.stations.map(s => s.name).join(' → ')}</div>
+        <div class="line-name">${line.name} <span class="line-type-tag">${line.type || 'G'}</span></div>
+        <div class="line-desc">${line.stations.length}站 · ${line.stations[0].name} → ${line.stations[line.stations.length - 1].name}</div>
       </div>`;
     });
     html += '</div>';
 
-    // Train services passing through this station
+    // 地铁接驳
+    if (cityName) {
+      const metroData = DataManager.getCityMetro(cityName);
+      if (metroData) {
+        // 查找最近的地铁站（名称匹配或距离最近）
+        const metroStations = metroData.lines.flatMap(l => l.stations);
+        const uniqueStations = [...new Map(metroStations.map(s => [s.name, s])).values()];
+        const nearby = uniqueStations
+          .map(s => ({ ...s, _dist: DataManager._haversineKm(station.center, s.center) }))
+          .sort((a, b) => a._dist - b._dist)
+          .slice(0, 3);
+
+        if (nearby.length && nearby[0]._dist < 3) {
+          html += `<div class="section"><h3><span class="dot" style="background:var(--metro-color)"></span>地铁接驳</h3>`;
+          nearby.forEach(ms => {
+            const distText = ms._dist < 1 ? `${Math.round(ms._dist * 1000)}m` : `${ms._dist.toFixed(1)}km`;
+            const walkMin = Math.ceil(ms._dist / 0.08);
+            const msLines = metroData.lines.filter(l => l.stations.some(s => s.name === ms.name));
+            const lineNames = msLines.map(l => `<span style="color:${l.color}">${l.name}</span>`).join(' ');
+            html += `<div class="line-item linkable" data-metro-station="${ms.name}" data-city="${cityName}">
+              <div class="line-name">🚇 ${ms.name}</div>
+              <div class="line-desc">🚶 ${distText} · 约${walkMin}分钟 · ${lineNames}</div>
+            </div>`;
+          });
+          html += '</div>';
+        }
+      }
+    }
+
+    // 热门方向（按终到站分组）
     const trains = DataManager.getStationTrains(station.name);
     if (trains.length > 0) {
-      const typeColorMap = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#A0522D' };
-      const typeLabelMap = { G: '高铁', D: '动车', C: '城际', K: '快速' };
-      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>经过车次 (${trains.length}) ${DataManager.trainBadge()}</h3>`;
+      // 按终到站分组
+      const destMap = new Map();
+      trains.forEach(train => {
+        const routeStations = train.route.filter(s => s.arrive || s.depart);
+        if (routeStations.length < 2) return;
+        const endStation = routeStations[routeStations.length - 1].station;
+        const stationStop = train.route.find(s => s.station === station.name || s.station.includes(station.name));
+        const depart = stationStop?.depart || stationStop?.arrive || '';
+
+        if (!destMap.has(endStation)) {
+          destMap.set(endStation, { trains: [], earliestDepart: depart });
+        }
+        const dest = destMap.get(endStation);
+        dest.trains.push(train);
+        if (depart && (!dest.earliestDepart || depart < dest.earliestDepart)) {
+          dest.earliestDepart = depart;
+        }
+      });
+
+      // 按车次数量排序，取前 8 个热门方向
+      const sortedDests = [...destMap.entries()]
+        .sort((a, b) => b[1].trains.length - a[1].trains.length)
+        .slice(0, 8);
+
+      html += `<div class="section"><h3><span class="dot" style="background:#FF6B35"></span>热门方向</h3>`;
+      sortedDests.forEach(([dest, info]) => {
+        const typeCounts = {};
+        info.trains.forEach(t => { typeCounts[t.type] = (typeCounts[t.type] || 0) + 1; });
+        const typeStr = Object.entries(typeCounts).map(([t, c]) => `${t}×${c}`).join(' ');
+        // 估算距离和时间
+        const destStation = info.trains[0].route.find(s => s.station === dest || s.station.includes(dest));
+        let durationStr = '';
+        if (destStation?.center) {
+          const km = DataManager._haversineKm(station.center, destStation.center);
+          const min = Math.round(km / 230 * 60 + 25);
+          durationStr = min >= 60 ? `${Math.floor(min / 60)}h${min % 60}m` : `${min}min`;
+        }
+        html += `<div class="dest-group" data-dest="${dest}">
+          <div class="dest-header">
+            <span class="dest-name">${dest}</span>
+            <span class="dest-count">${info.trains.length}趟</span>
+          </div>
+          <div class="dest-meta">
+            ${info.earliestDepart ? `<span>最早 ${info.earliestDepart}</span>` : ''}
+            ${durationStr ? `<span>约 ${durationStr}</span>` : ''}
+            <span>${typeStr}</span>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+
+      // 全部车次（折叠）
+      html += `<div class="section">
+        <h3 class="collapsible" data-collapse-target="all-trains">
+          <span class="dot" style="background:#FF6B35"></span>全部车次 (${trains.length}) ${DataManager.trainBadge()}
+          <span class="collapse-arrow">▸</span>
+        </h3>
+        <div class="collapse-content" id="all-trains" style="display:none">`;
       html += DataManager.trainNotice();
       html += `<div class="train-list">`;
+      const typeClassMap = { G: 'g-type', D: 'd-type', C: 'c-type', K: 'k-type' };
       trains.forEach(train => {
-        const typeClass = (train.type || 'G').toLowerCase() + '-type';
+        const typeClass = typeClassMap[train.type] || 'g-type';
         const routeStations = train.route.filter(s => s.arrive || s.depart);
         const startStation = routeStations.length > 0 ? routeStations[0].station : '';
         const endStation = routeStations.length > 1 ? routeStations[routeStations.length - 1].station : '';
-
-        // Find arrival/departure time at this station
         const stationStop = train.route.find(s => s.station === station.name || s.station.includes(station.name));
         let timeStr = '';
         if (stationStop) {
@@ -2171,11 +2342,12 @@ const UIController = {
           <div class="train-route-brief">${startStation} → ${endStation}</div>
         </div>`;
       });
-      html += `</div></div>`;
+      html += `</div></div></div>`;
     }
 
     this._setDetail(html, { type: 'hsrStation', stationName: station.name, station }, options);
 
+    // 事件绑定：线路点击
     this.elements.detailContent.querySelectorAll('.line-item[data-hsr-line]').forEach(item => {
       item.addEventListener('click', () => {
         const line = DataManager.getHSRLine(item.dataset.hsrLine);
@@ -2183,15 +2355,60 @@ const UIController = {
       });
     });
 
-    // Train card click handlers
+    // 事件绑定：地铁站点击
+    this.elements.detailContent.querySelectorAll('.line-item[data-metro-station]').forEach(item => {
+      item.addEventListener('click', () => {
+        const s = DataManager.getMetroStation(item.dataset.city, item.dataset.metroStation);
+        const ls = DataManager.getMetroStationLines(item.dataset.city, item.dataset.metroStation);
+        if (s) this.showMetroStationDetail(s, ls, item.dataset.city);
+      });
+    });
+
+    // 事件绑定：热门方向点击 → 展开该方向的车次列表
+    this.elements.detailContent.querySelectorAll('.dest-group').forEach(group => {
+      group.addEventListener('click', () => {
+        const dest = group.dataset.dest;
+        // 展开全部车次并滚动
+        const collapseEl = document.getElementById('all-trains');
+        if (collapseEl && collapseEl.style.display === 'none') {
+          collapseEl.style.display = '';
+          const arrow = this.elements.detailContent.querySelector('.collapse-arrow');
+          if (arrow) arrow.textContent = '▾';
+        }
+        // 高亮该方向的车次卡片
+        this.elements.detailContent.querySelectorAll('.train-card').forEach(card => {
+          const brief = card.querySelector('.train-route-brief');
+          if (brief && brief.textContent.includes(dest)) {
+            card.style.background = '#fff3e0';
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            card.style.background = '';
+          }
+        });
+      });
+    });
+
+    // 事件绑定：折叠切换
+    this.elements.detailContent.querySelectorAll('.collapsible').forEach(el => {
+      el.addEventListener('click', () => {
+        const targetId = el.dataset.collapseTarget;
+        const target = document.getElementById(targetId);
+        if (target) {
+          const hidden = target.style.display === 'none';
+          target.style.display = hidden ? '' : 'none';
+          const arrow = el.querySelector('.collapse-arrow');
+          if (arrow) arrow.textContent = hidden ? '▾' : '▸';
+        }
+      });
+    });
+
+    // 事件绑定：车次卡片点击
     this.elements.detailContent.querySelectorAll('.train-card').forEach(card => {
       card.addEventListener('click', () => {
         const trainNumber = card.dataset.train;
         LayerManager.highlightTrain(trainNumber);
         const train = DataManager.getTrainByNumber(trainNumber);
-        if (train) {
-          UIController.showTrainDetail(train);
-        }
+        if (train) this.showTrainDetail(train);
       });
     });
   },
@@ -2297,21 +2514,85 @@ const UIController = {
 
   showMetroStationDetail(station, transferLines, cityName, options = {}) {
     let html = `<h2>${station.name}</h2>`;
-    html += `<div class="city-meta">${cityName}地铁站</div>`;
-    html += `<div class="section"><h3><span class="dot" style="background:var(--metro-color)"></span>经过线路</h3>`;
+    html += `<div class="city-meta">${cityName}地铁站 · ${transferLines.length > 1 ? '换乘站' : '普通站'}</div>`;
+
+    // 经过线路
+    html += `<div class="section"><h3><span class="dot" style="background:var(--metro-color)"></span>经过线路 (${transferLines.length})</h3>`;
     transferLines.forEach(line => {
+      const otherLines = transferLines.filter(l => l.name !== line.name);
+      const transferNote = otherLines.length ? ` → 换乘 ${otherLines.map(l => l.name).join('、')}` : '';
       html += `<div class="line-item linkable" style="border-left-color:${line.color}" data-metro-line="${line.name}" data-city="${cityName}">
         <div class="line-name">${line.name}</div>
+        ${transferNote ? `<div class="line-desc">${transferNote}</div>` : ''}
       </div>`;
     });
     html += '</div>';
 
+    // 附近景点（先查 nearestStation 精确匹配，再按距离补漏）
+    const exactSpots = DataManager.getSpotsNearStation(station.name, cityName);
+    const nearSpots = exactSpots.length >= 5 ? exactSpots
+      : DataManager.getSpotsAroundStation(station.name, cityName, 1.5)
+          .filter(s => !exactSpots.find(e => e.name === s.name))
+          .slice(0, 5 - exactSpots.length);
+
+    const allNearby = [
+      ...exactSpots.map(s => ({ ...s, _distanceKm: s.nearestStation.distance, _source: '精确匹配' })),
+      ...nearSpots,
+    ].sort((a, b) => a._distanceKm - b._distanceKm);
+
+    if (allNearby.length) {
+      html += `<div class="section"><h3><span class="dot" style="background:#27ae60"></span>附近景点 (${allNearby.length})</h3>`;
+      allNearby.forEach(spot => {
+        const dist = spot._distanceKm;
+        const distText = dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`;
+        const walkMin = Math.ceil(dist / 0.08); // 步行 ~80m/min
+        const icon = { '自然': '🏞️', '历史': '🏛️', '文化': '🎭', '现代': '🏙️' }[spot.category] || '📍';
+        const dur = spot.visitDuration ? `${Math.floor(spot.visitDuration[0] / 60)}~${Math.floor(spot.visitDuration[1] / 60)}h` : '';
+        const price = spot.ticketPrice ? (spot.ticketPrice[0] === 0 ? '免费' : `¥${spot.ticketPrice[0]}起`) : '';
+
+        html += `<div class="spot-card linkable" data-spot="${spot.name}" data-city="${spot.city}">
+          <div class="spot-card-header">
+            <span class="spot-icon">${icon}</span>
+            <span class="spot-name">${spot.name}</span>
+            <span class="spot-category-tag">${spot.category}</span>
+          </div>
+          <div class="spot-card-meta">
+            <span>🚶 ${distText} · 约${walkMin}分钟</span>
+            ${dur ? `<span>⏱ ${dur}</span>` : ''}
+            ${price ? `<span>${price}</span>` : ''}
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // 出行提示
+    const isTransfer = transferLines.length > 1;
+    if (isTransfer) {
+      const lineNames = transferLines.map(l => l.name).join('、');
+      html += `<div class="section"><h3><span class="dot" style="background:#f39c12"></span>出行提示</h3>`;
+      html += `<div class="data-note">本站为换乘站，可换乘 ${lineNames}。换乘一般需要 3-5 分钟步行。</div>`;
+      html += '</div>';
+    }
+
     this._setDetail(html, { type: 'metroStation', cityName, stationName: station.name, station }, options);
 
+    // 事件绑定：线路点击
     this.elements.detailContent.querySelectorAll('.line-item[data-metro-line]').forEach(item => {
       item.addEventListener('click', () => {
         const line = DataManager.getMetroLine(item.dataset.city, item.dataset.metroLine);
         if (line) this.showMetroLineDetail(line, item.dataset.city);
+      });
+    });
+
+    // 事件绑定：景点点击
+    this.elements.detailContent.querySelectorAll('.spot-card[data-spot]').forEach(card => {
+      card.addEventListener('click', () => {
+        const spot = DataManager.spots.find(s => s.name === card.dataset.spot && s.city === card.dataset.city);
+        if (spot) {
+          MapManager.flyTo(spot.center, 14);
+          this.showSpotDetail(spot);
+        }
       });
     });
   },
