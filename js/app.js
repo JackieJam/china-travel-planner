@@ -1047,6 +1047,9 @@ const LayerManager = {
   _highlightedTrain: null,
   _trainHighlight: [],
 
+  // 城市间路线高亮
+  _cityRouteOverlays: [],
+
   // Station importance classification
   MAJOR_STATIONS: new Set([
     '北京', '北京南', '北京西', '北京朝阳',
@@ -1531,6 +1534,9 @@ const LayerManager = {
       this._metroLabelStart = undefined;
     }
 
+    // 清除之前的城市间路线
+    this._clearCityRoutes();
+
     // 居中到城市（保持当前缩放级别不变，由用户自行缩放）
     MapManager.map.panTo(city.center);
 
@@ -1541,6 +1547,13 @@ const LayerManager = {
       else DataManager.loadSpots().then(loaded => {
         if (loaded && this.selectedCity === cityName && this.visible.spots) this._renderSpotsLayer(cityName);
       });
+    }
+
+    // 如果有出发城市且不是同一城市，异步查询并绘制路线
+    const originCity = UIController.selectedOriginCity;
+    if (originCity && originCity !== cityName && DataManager._trainsLoaded) {
+      const routeResult = DataManager.queryRoutes(originCity, cityName);
+      this.showCityRoutes(originCity, cityName, routeResult);
     }
 
     // 高亮城市列表中对应项
@@ -1556,6 +1569,7 @@ const LayerManager = {
     this._clearOverlays(this.overlays.metroLineLabels);
     this._clearOverlays(this.overlays.metroStations);
     this._clearOverlays(this.overlays.spotMarkers);
+    this._clearCityRoutes();
     // Remove metro-contributed station labels
     if (this._metroLabelStart !== undefined) {
       const removed = this.overlays.stationLabels.splice(this._metroLabelStart);
@@ -2140,6 +2154,7 @@ const LayerManager = {
     this._trainHighlight.forEach(o => MapManager.map.remove(o));
     this._trainHighlight = [];
     this._highlightedTrain = null;
+    this._clearCityRoutes();
     this._restoreAllLines();
 
     // Hide the clear-highlight button
@@ -2153,6 +2168,104 @@ const LayerManager = {
 
   _restoreAllLines() {
     this.overlays.hsrLines.forEach(l => this._applyLineStyle(l, false));
+  },
+
+  // ---- City Route Lines (between origin and destination) ----
+  showCityRoutes(fromCity, toCity, routeResults) {
+    this._clearCityRoutes();
+    if (!routeResults) return;
+
+    const map = MapManager.map;
+    const direct = routeResults.direct || [];
+    const typeColors = { G: '#E63946', D: '#457B9D', C: '#2A9D8F', K: '#FF6600' };
+
+    // Draw direct train routes on the map
+    direct.forEach((r, idx) => {
+      const train = r.train;
+      if (!train || !train.route || train.route.length < 2) return;
+
+      // Get the full path of the train between from and to stations
+      const stops = train.route.filter(s => s.arrive || s.depart);
+      const fromIdx = stops.findIndex(s =>
+        s.station === r.fromStation || s.station.includes(r.fromStation) || r.fromStation.includes(s.station)
+      );
+      const toIdx = stops.findIndex(s =>
+        s.station === r.toStation || s.station.includes(r.toStation) || r.toStation.includes(s.station)
+      );
+
+      if (fromIdx < 0 || toIdx < 0 || toIdx <= fromIdx) return;
+
+      const segment = stops.slice(fromIdx, toIdx + 1);
+      const path = segment.map(s => s.center).filter(Boolean);
+      if (path.length < 2) return;
+
+      const color = typeColors[train.type] || '#E63946';
+      // Use slightly different opacity for multiple routes to create layering effect
+      const opacity = Math.max(0.5, 0.9 - idx * 0.1);
+
+      const polyline = new AMap.Polyline({
+        path: path,
+        strokeColor: color,
+        strokeWeight: 5,
+        strokeOpacity: opacity,
+        lineJoin: 'round',
+        lineCap: 'round',
+        zIndex: 150 + idx,
+        cursor: 'pointer',
+      });
+
+      polyline.on('click', () => {
+        this.highlightTrain(train.number);
+        if (UIController) UIController.showTrainDetail(train);
+      });
+
+      map.add(polyline);
+      this._cityRouteOverlays.push(polyline);
+
+      // Add start and end station markers
+      if (idx === 0) {
+        // Only add markers once for the first route (or if stations differ)
+        const startMarker = new AMap.Marker({
+          position: segment[0].center,
+          content: `<div style="background:#27ae60;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚉 ${segment[0].station}</div>`,
+          offset: new AMap.Pixel(-30, -28),
+          zIndex: 160,
+        });
+        const endMarker = new AMap.Marker({
+          position: segment[segment.length - 1].center,
+          content: `<div style="background:#e74c3c;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🏁 ${segment[segment.length - 1].station}</div>`,
+          offset: new AMap.Pixel(-30, -28),
+          zIndex: 160,
+        });
+        map.add(startMarker);
+        map.add(endMarker);
+        this._cityRouteOverlays.push(startMarker, endMarker);
+      }
+    });
+
+    // Show clear button if we have routes
+    if (this._cityRouteOverlays.length > 0) {
+      const clearBtn = document.getElementById('clear-highlight-btn');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+
+      // Fit map to show all route lines
+      const allPoints = this._cityRouteOverlays
+        .filter(o => o.getPath)
+        .flatMap(o => o.getPath().map(p => [p.getLng(), p.getLat()]));
+      if (allPoints.length >= 2) {
+        const lngs = allPoints.map(p => p[0]);
+        const lats = allPoints.map(p => p[1]);
+        map.setBounds(new AMap.Bounds(
+          [Math.min(...lngs) - 0.5, Math.min(...lats) - 0.5],
+          [Math.max(...lngs) + 0.5, Math.max(...lats) + 0.5]
+        ));
+      }
+    }
+  },
+
+  _clearCityRoutes() {
+    this._cityRouteOverlays.forEach(o => MapManager.map.remove(o));
+    this._cityRouteOverlays = [];
   },
 
   // ---- Utility ----
@@ -2288,17 +2401,29 @@ const UIController = {
     const select = this.elements.originCitySelect;
     if (!select) return;
 
-    select.addEventListener('change', () => {
+    select.addEventListener('change', async () => {
       this.selectedOriginCity = select.value;
       const fromInput = document.getElementById('route-from');
       if (fromInput && this.selectedOriginCity) fromInput.value = this.selectedOriginCity;
       this.hideStationTooltip();
+
+      // 如果当前有选中的城市，绘制城市间路线
+      const selectedCityName = LayerManager.selectedCity;
+      if (this.selectedOriginCity && selectedCityName && this.selectedOriginCity !== selectedCityName) {
+        // 确保车次数据已加载
+        if (!DataManager._trainsLoaded) await DataManager.loadTrains();
+        const routeResult = DataManager.queryRoutes(this.selectedOriginCity, selectedCityName);
+        LayerManager.showCityRoutes(this.selectedOriginCity, selectedCityName, routeResult);
+      } else {
+        LayerManager._clearCityRoutes();
+      }
+
       if (this.currentDetailView && this.currentDetailView.type === 'city') {
         this.showCityDetail(this.currentDetailView.cityName, { replace: true });
       }
       this.setStatus(this.selectedOriginCity
-        ? `站点提示出发城市: ${this.selectedOriginCity}`
-        : '请选择出发城市后悬停站点');
+        ? `出发城市: ${this.selectedOriginCity} · 点击其他城市查看路线`
+        : '请选择出发城市后点击其他城市');
     });
   },
 
@@ -3008,18 +3133,31 @@ const UIController = {
 
   _renderCityRecommendationSection(cityName) {
     const fromCity = this.selectedOriginCity;
-    if (!fromCity) return '';
 
-    const title = `<h4>从 ${fromCity} 出发的推荐车次</h4>`;
+    // 未选出发城市时，显示引导提示
+    if (!fromCity) {
+      return `<div class="overview-highlights city-route-recommendations">
+        <h4>🚄 车次路线查询</h4>
+        <div class="route-prompt">
+          <p>在左侧选择「出发城市」，然后点击地图上的其他城市，即可查看推荐车次并在地图上显示路线。</p>
+          <p style="font-size:11px;color:#8892a4;margin-top:6px;">也可以使用上方的路线查询框搜索具体车次。</p>
+        </div>
+      </div>`;
+    }
+
+    const title = `<h4>🚄 ${fromCity} → ${cityName}</h4>`;
     if (fromCity === cityName) {
       return `<div class="overview-highlights city-route-recommendations">${title}
-        <div class="route-empty compact">这里就是当前出发城市。</div>
+        <div class="route-empty compact">当前城市就是出发城市，请选择其他城市查看路线。</div>
       </div>`;
     }
 
     if (!DataManager._trainsLoaded) {
       return `<div class="overview-highlights city-route-recommendations">${title}
-        <div class="route-empty compact">正在加载车次数据，稍后显示推荐列表...</div>
+        <div class="route-loading-compact">
+          <div class="loading-spinner-small"></div>
+          <span>正在加载车次数据...</span>
+        </div>
       </div>`;
     }
 
@@ -3029,6 +3167,19 @@ const UIController = {
     const estimate = result.estimate;
 
     let html = `<div class="overview-highlights city-route-recommendations">${title}`;
+
+    // Summary header
+    if (direct.length) {
+      html += `<div class="route-summary">
+        <span class="route-count">${direct.length}趟直达</span>
+        <span class="route-fastest">最快 ${DataManager._formatDuration(direct[0].duration)}</span>
+      </div>`;
+    } else if (transfer.length) {
+      html += `<div class="route-summary">
+        <span class="route-count">无直达，${transfer.length}个换乘方案</span>
+      </div>`;
+    }
+
     if (direct.length) {
       direct.forEach(r => {
         html += this._renderRecommendationTrainCard(r);
@@ -3060,10 +3211,20 @@ const UIController = {
       });
     } else if (estimate) {
       html += `<div class="route-disclaimer">
-        <span>ℹ</span> 暂无匹配车次。按 ${estimate.fromStation} → ${estimate.toStation} 的距离估算约 ${DataManager._formatDuration(estimate.duration)}，约 ${estimate.distanceKm} km。
+        <span>ℹ️</span> 暂无匹配车次数据。按 ${estimate.fromStation} → ${estimate.toStation} 的距离估算约 ${DataManager._formatDuration(estimate.duration)}，约 ${estimate.distanceKm} km。
+      </div>`;
+      html += `<div class="route-external-link">
+        <a href="https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc" target="_blank" rel="noopener">
+          🎫 前往 12306 查询实时车次
+        </a>
       </div>`;
     } else {
-      html += `<div class="route-empty compact">暂无可推荐车次。</div>`;
+      html += `<div class="route-empty compact">
+        暂无可推荐车次。
+        <a href="https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:var(--accent);">
+          🎫 前往 12306 查询
+        </a>
+      </div>`;
     }
     html += `</div>`;
     return html;
