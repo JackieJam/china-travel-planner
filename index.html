@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>全国交通旅游地图</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css?v=20260608-1">
   <!-- 配置（API Key 等） -->
   <script src="js/config.js?v=20260605-1"></script>
   <!-- 高德地图 JS API 2.0（key 从 config.js 读取） -->
@@ -38,7 +39,20 @@
   <div id="app">
     <!-- 加载遮罩 -->
     <div id="loading-overlay" class="loading-overlay">
-      <div class="loading-spinner"></div>
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <div id="loading-text" class="loading-text">加载地图中...</div>
+        <div class="loading-progress">
+          <div id="loading-progress-fill" class="loading-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="map-progress" class="map-progress hidden">
+      <span id="map-progress-text">地图渲染中...</span>
+      <div class="map-progress-track">
+        <div id="map-progress-fill" class="map-progress-fill"></div>
+      </div>
     </div>
     <!-- 移动端汉堡按钮 -->
     <button id="sidebar-toggle" class="sidebar-toggle" aria-label="切换侧边栏">
@@ -140,6 +154,16 @@
     <!-- 地图容器 -->
     <main id="map-container"></main>
 
+    <!-- 地图左上角：站点 hover 的出发城市选择 -->
+    <div id="origin-control" class="origin-control">
+      <label for="origin-city-select">出发城市</label>
+      <select id="origin-city-select">
+        <option value="">选择城市</option>
+      </select>
+    </div>
+
+    <div id="station-route-tooltip" class="station-route-tooltip hidden"></div>
+
     <!-- 右侧详情面板 -->
     <div id="detail-panel" class="detail-panel hidden">
       <button id="detail-close" class="detail-close" title="关闭">×</button>
@@ -162,6 +186,6 @@
     </footer>
   </div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=20260608-1"></script>
 </body>
 </html>

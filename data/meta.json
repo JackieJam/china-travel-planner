@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-05T14:26:07.202412",
+  "updatedAt": "2026-06-05T17:53:48.629905",
   "generatedAt": "2026-06-05T09:47:48.711574",
   "datasets": {
     "cities": {
@@ -11,21 +11,21 @@
       "count": 89
     },
     "metro": {
-      "updatedAt": "2026-06-05T09:08:05.144245",
-      "count": 26
+      "updatedAt": "2026-06-08T10:30:00.000000",
+      "count": 29
     },
     "spots": {
       "updatedAt": "2026-06-05T09:50:42.774961",
       "count": 6231
     },
     "trains": {
-      "updatedAt": "2026-06-05T14:26:07.202405",
-      "count": 3188,
+      "updatedAt": "2026-06-05T17:53:48.629895",
+      "count": 3429,
       "source": "12306 leftTicket API",
       "coverage": {
-        "legacy": 2986,
-        "endpoint_only": 169,
-        "line_interpolated": 33
+        "legacy": 2827,
+        "line_interpolated": 260,
+        "endpoint_only": 342
       }
     }
   },

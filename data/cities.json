@@ -234,7 +234,7 @@
       106.63,
       26.648
     ],
-    "hasMetro": false,
+    "hasMetro": true,
     "hsrHub": true,
     "zoom": 11,
     "description": "爽爽的贵阳，西南交通枢纽"
@@ -378,7 +378,7 @@
       120.312,
       31.491
     ],
-    "hasMetro": false,
+    "hasMetro": true,
     "hsrHub": true,
     "zoom": 11,
     "description": "太湖明珠，苏南重镇"
@@ -438,7 +438,7 @@
       113.752,
       23.021
     ],
-    "hasMetro": false,
+    "hasMetro": true,
     "hsrHub": false,
     "zoom": 11,
     "description": "世界工厂"
