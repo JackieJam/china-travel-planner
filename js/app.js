@@ -1551,9 +1551,20 @@ const LayerManager = {
 
     // 如果有出发城市且不是同一城市，异步查询并绘制路线
     const originCity = UIController.selectedOriginCity;
-    if (originCity && originCity !== cityName && DataManager._trainsLoaded) {
-      const routeResult = DataManager.queryRoutes(originCity, cityName);
-      this.showCityRoutes(originCity, cityName, routeResult);
+    if (originCity && originCity !== cityName) {
+      const drawRoutes = () => {
+        const routeResult = DataManager.queryRoutes(originCity, cityName);
+        this.showCityRoutes(originCity, cityName, routeResult);
+      };
+      if (DataManager._trainsLoaded) {
+        drawRoutes();
+      } else {
+        DataManager.loadTrains().then(() => {
+          if (this.selectedCity === cityName && UIController.selectedOriginCity === originCity) {
+            drawRoutes();
+          }
+        });
+      }
     }
 
     // 高亮城市列表中对应项
